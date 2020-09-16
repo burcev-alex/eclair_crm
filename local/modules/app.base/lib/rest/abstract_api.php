@@ -252,7 +252,7 @@ abstract class Api
 		$body = htmlspecialchars_decode(trim($phpInput));
 
 		if($this->isJson($body)){
-			$result = json_decode($body);
+			$result = json_decode($body, true);
 		}
 		else{
 			try {

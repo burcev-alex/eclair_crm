@@ -22,6 +22,14 @@ $arClassBase = array(
 
 	'\App\Integration\Event' => 'lib/event.php',
 	'\App\Integration\Tools' => 'lib/tools.php',
+
+	'\App\Integration\Entity\Crm\ActivityTable' => 'lib/entity/crm/activity.php',
+    '\App\Integration\Entity\Crm\ContactTable' => 'lib/entity/crm/contact.php',
+    '\App\Integration\Entity\Crm\LeadTable' => 'lib/entity/crm/lead.php',
+
+	'\App\Integration\Queue\Host' => 'lib/queue/host.php',
+    '\App\Integration\Queue\AbstractBase' => 'lib/queue/abstractBase.php',
+    '\App\Integration\Queue\Deal\IncomingOrder' => 'lib/queue/deal/incomingOrder.php'
 );
 
 $arClassLib = array();

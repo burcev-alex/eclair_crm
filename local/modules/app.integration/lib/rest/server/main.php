@@ -13,6 +13,7 @@ use App\Integration as Union;
 class Main extends Rest\Api
 {
 	protected $apiKey;
+	protected $content;
 	protected $debug = false;
 
 	/**
@@ -82,15 +83,26 @@ class Main extends Rest\Api
 	{
 		if ($this->method == 'POST') {
 
-			$resource = $this->request;
-			$resource['file'] = $this->file;
+			$resource = $this->content;
 			
-			$guid = randString(12);
+			$entity = new Union\Queue\Deal\IncomingOrder();
 
-			$arData['status'] = "success";
-			$arData['data'] = [
-				'guid' => $guid
-			];
+			if($entity instanceof Union\Queue\AbstractBase){
+				$entity->init($resource)->command();
+				$result = $entity->result();
+			}
+			else{
+				$result = [];
+			}
+
+			if(count($result) > 0){
+				$arData['status'] = "success";
+				$arData['data'] = $result;
+			}
+			else{
+				$arData['status'] = "error";
+				$arData['data'] = [];
+			}
 
 			return $arData;
 		} else {
