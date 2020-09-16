@@ -840,4 +840,18 @@ $arUrlRewrite=array (
     'PATH' => '/kb/index.php',
     'SORT' => 100,
   ),
+  9000 => [
+	'CONDITION' => '#^/api/v1/#',
+	'RULE' => 'request=$1',
+	'ID' => '',
+	'PATH' => '/api/v1/server.php',
+	'SORT' => 100,
+],
+10000 => [
+	'CONDITION' => '#^/ajax/[A-Za-z0-9_-]+/\\??.*$#',
+	'RULE' => '',
+	'ID' => '',
+	'PATH' => '/local/modules/app.base/ajax/index.php',
+	'SORT' => 100,
+],
 );
