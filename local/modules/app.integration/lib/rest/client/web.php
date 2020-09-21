@@ -49,15 +49,50 @@ class Web extends Rest\Client\AbstractBase
 	}
 
 	/**
-	 * Отправка заказа
-	 *
+	 * Отправка информации по товару
+	 * 
 	 * @param $action
 	 * @param $data
 	 *
 	 * @return array|mixed
 	 * @throws \Exception
 	 */
-	public function order($action, $data)
+	public function product($action, $data)
+	{
+		$id = 0;
+		if($action != "add"){
+			$id = $data['ID'];
+		}
+		
+		$response_json = array();
+		$method = "product/".$id."/".$action."/";
+
+		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
+
+		try {
+			$result = $this->api->post($this->url . $method, $requestString);
+			$response_json = $result->decode_response();
+
+			$this->getWarningMessage($response_json, $result, $this->url . $method, $data);
+
+		} catch (\Exception $e) {
+			$response_json = $this->getErrorMessage($this->url . $method, $data);
+			$response_json['errors'] = $e->getMessage();
+		}
+
+		return $response_json;
+	}
+
+	/**
+	 * Отправка информации по разделу
+	 * 
+	 * @param $action
+	 * @param $data
+	 *
+	 * @return array|mixed
+	 * @throws \Exception
+	 */
+	public function section($action, $data)
 	{
 		$id = 0;
 		if($action != "add"){
@@ -65,7 +100,42 @@ class Web extends Rest\Client\AbstractBase
 		}
 		
 		$response_json = array();
-		$method = "order/".$id."/".$action."/";
+		$method = "section/".$id."/".$action."/";
+
+		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
+
+		try {
+			$result = $this->api->post($this->url . $method, $requestString);
+			$response_json = $result->decode_response();
+
+			$this->getWarningMessage($response_json, $result, $this->url . $method, $data);
+
+		} catch (\Exception $e) {
+			$response_json = $this->getErrorMessage($this->url . $method, $data);
+			$response_json['errors'] = $e->getMessage();
+		}
+
+		return $response_json;
+	}
+
+	/**
+	 * Отправка информации по свойству
+	 * 
+	 * @param $action
+	 * @param $data
+	 *
+	 * @return array|mixed
+	 * @throws \Exception
+	 */
+	public function property($action, $data)
+	{
+		$id = 0;
+		if($action != "add"){
+			$id = $data['id'];
+		}
+		
+		$response_json = array();
+		$method = "property/".$id."/".$action."/";
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
 

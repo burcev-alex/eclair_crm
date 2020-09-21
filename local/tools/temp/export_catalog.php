@@ -127,8 +127,8 @@ if ($fp = fopen($ABS_FILE_NAME, 'ab')) {
         $arErrors[] = 'IBLOCK_CML2_IBLOCK_ERROR';
 	}
 	
-	exec("tar -czvf /home/bitrix/ext_www/ecler.gk-strizhi.ru/upload/export_tmp_files.tar.gz ".$DIR_NAME);
-	exec("rm -rf ".$DIR_NAME);
+	#exec("tar -czvf /home/bitrix/ext_www/ecler.gk-strizhi.ru/upload/export_tmp_files.tar.gz ".$DIR_NAME);
+	#exec("rm -rf ".$DIR_NAME);
 }
 
 echo 'OK';
