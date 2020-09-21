@@ -68,6 +68,7 @@ class Web extends Rest\Client\AbstractBase
 		$method = "product/".$id."/".$action."/";
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
+		p2f(json_encode($data, JSON_UNESCAPED_UNICODE));
 
 		try {
 			$result = $this->api->post($this->url . $method, $requestString);
@@ -103,6 +104,8 @@ class Web extends Rest\Client\AbstractBase
 		$method = "section/".$id."/".$action."/";
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
+		
+		p2f(json_encode($data, JSON_UNESCAPED_UNICODE));
 
 		try {
 			$result = $this->api->post($this->url . $method, $requestString);
@@ -138,6 +141,7 @@ class Web extends Rest\Client\AbstractBase
 		$method = "property/".$id."/".$action."/";
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
+		p2f(json_encode($data, JSON_UNESCAPED_UNICODE));
 
 		try {
 			$result = $this->api->post($this->url . $method, $requestString);

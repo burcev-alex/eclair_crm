@@ -29,7 +29,11 @@ $arClassBase = array(
 
 	'\App\Integration\Queue\Host' => 'lib/queue/host.php',
     '\App\Integration\Queue\AbstractBase' => 'lib/queue/abstractBase.php',
-    '\App\Integration\Queue\Deal\IncomingOrder' => 'lib/queue/deal/incomingOrder.php'
+	'\App\Integration\Queue\Deal\IncomingOrder' => 'lib/queue/deal/incomingOrder.php',
+	
+    '\App\Integration\Handlers\Iblock\Element' => 'lib/handlers/iblock/element.php',
+    '\App\Integration\Handlers\Iblock\Section' => 'lib/handlers/iblock/section.php',
+    '\App\Integration\Handlers\Iblock\Property' => 'lib/handlers/iblock/property.php',
 );
 
 $arClassLib = array();
