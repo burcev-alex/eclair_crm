@@ -34,6 +34,7 @@ $arClassBase = array(
     '\App\Integration\Handlers\Iblock\Element' => 'lib/handlers/iblock/element.php',
     '\App\Integration\Handlers\Iblock\Section' => 'lib/handlers/iblock/section.php',
     '\App\Integration\Handlers\Iblock\Property' => 'lib/handlers/iblock/property.php',
+    '\App\Integration\Handlers\Iblock\Price' => 'lib/handlers/iblock/price.php',
 );
 
 $arClassLib = array();

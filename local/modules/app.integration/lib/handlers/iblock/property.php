@@ -15,6 +15,10 @@ class Property {
 	 * @return void
 	 */
 	public static function onAfterIBlockPropertyAdd(&$arFields){
+
+		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
+		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+
 		$endpoint = new Union\Rest\Client\Web();
 		$response = $endpoint->property("add", $arFields);
 	}
@@ -26,6 +30,10 @@ class Property {
 	 * @return void
 	 */
 	public static function onAfterIBlockPropertyUpdate(&$arFields){
+
+		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
+		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+
 		$endpoint = new Union\Rest\Client\Web();
 		$response = $endpoint->property("update", $arFields);
 	}
@@ -37,6 +45,10 @@ class Property {
 	 * @return void
 	 */
 	public static function onAfterIBlockPropertyDelete(&$arFields){
+
+		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
+		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+		
 		$endpoint = new Union\Rest\Client\Web();
 		$response = $endpoint->property("delete", $arFields);
 	}

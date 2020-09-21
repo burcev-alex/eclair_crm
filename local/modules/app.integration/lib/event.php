@@ -35,5 +35,10 @@ class Event
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionAdd', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionAdd']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionUpdate', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionUpdate']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionDelete', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionDelete']);
+
+		// price of iblock
+		$eventManager->addEventHandler('catalog', 'OnPriceAdd', ['\App\Integration\Handlers\Iblock\Price', 'onPriceAdd']);
+		$eventManager->addEventHandler('catalog', 'OnPriceUpdate', ['\App\Integration\Handlers\Iblock\Price', 'onPriceUpdate']);
+		$eventManager->addEventHandler('catalog', 'OnPriceDelete', ['\App\Integration\Handlers\Iblock\Price', 'onPriceDelete']);
 	}
 }

@@ -17,8 +17,15 @@ class Section {
 		
 		$arFields['PARENT'] = Base\Tools::getParentSection($arFields['ID']);
 
+		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
+		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+
+		if(IntVal($arFields['PICTURE']) > 0){
+			$arFields['PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PICTURE']);
+		}
+
 		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("add", $arFields);
+		$response = $endpoint->section("add", $arFields);
 	}
 
 	/**
@@ -30,9 +37,16 @@ class Section {
 	public static function onAfterIBlockSectionUpdate(&$arFields){
 
 		$arFields['PARENT'] = Base\Tools::getParentSection($arFields['ID']);
+
+		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
+		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+
+		if(IntVal($arFields['PICTURE']) > 0){
+			$arFields['PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PICTURE']);
+		}
 		
 		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("update", $arFields);
+		$response = $endpoint->section("update", $arFields);
 	}
 	
 	/**
@@ -42,8 +56,12 @@ class Section {
 	 * @return void
 	 */
 	public static function onAfterIBlockSectionDelete(&$arFields){
+
+		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
+		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+
 		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("delete", $arFields);
+		$response = $endpoint->section("delete", $arFields);
 	}
 }
 ?>

@@ -6,29 +6,28 @@ use \Bitrix\Main;
 use \App\Base;
 use \App\Integration as Union;
 
-class Element {
-	
+class Price {
 	/**
-	 * После добавления элемента в инфоблок
+	 * После добавления цены товара
 	 *
 	 * @param array $arFields
 	 * @return void
 	 */
-	public static function onAfterIBlockElementAdd(&$arFields){
+	public static function onPriceAdd($ID, &$arFields){
 		\CModule::IncludeModule('catalog');
 		\CModule::IncludeModule('iblock');
 
-		$data = Base\Tools::getElementByIDWithProps($arFields['ID']);
+		$data = Base\Tools::getElementByIDWithProps($arFields['PRODUCT_ID']);
 
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
+		$arIblock = \CIBlock::GetByID($data["IBLOCK_ID"])->Fetch();
 		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
 
 		if(IntVal($data['PREVIEW_PICTURE']) > 0){
-			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PREVIEW_PICTURE']);
+			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);
 		}
 
 		if(IntVal($data['DETAIL_PICTURE']) > 0){
-			$data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['DETAIL_PICTURE']);
+			$data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['DETAIL_PICTURE']);
 		}
 
 		foreach ($data['PROPERTIES'] as $propertyCode => $propValues) {
@@ -62,7 +61,7 @@ class Element {
 				'ID' => 'DESC'
 			),
 			array(
-					"PRODUCT_ID" => $arFields['ID'],
+					"PRODUCT_ID" => $arFields['PRODUCT_ID'],
 					"CATALOG_GROUP_ID" => 1
 				)
 		);
@@ -77,25 +76,26 @@ class Element {
 	}
 
 	/**
-	 * После изменения элемента в инфоблоке
+	 * После изменения цены товара
 	 *
 	 * @param array $arFields
 	 * @return void
 	 */
-	public static function onAfterIBlockElementUpdate(&$arFields){
+	public static function onPriceUpdate($ID, &$arFields){
+		\CModule::IncludeModule('iblock');
 		\CModule::IncludeModule('catalog');
 
-		$data = Base\Tools::getElementByIDWithProps($arFields['ID']);
+		$data = Base\Tools::getElementByIDWithProps($arFields['PRODUCT_ID']);
 
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
+		$arIblock = \CIBlock::GetByID($data["IBLOCK_ID"])->Fetch();
 		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
 
 		if(IntVal($data['PREVIEW_PICTURE']) > 0){
-			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PREVIEW_PICTURE']);
+			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);
 		}
 
 		if(IntVal($data['DETAIL_PICTURE']) > 0){
-			$data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['DETAIL_PICTURE']);
+			$data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['DETAIL_PICTURE']);
 		}
 
 		foreach ($data['PROPERTIES'] as $propertyCode => $propValues) {
@@ -129,7 +129,7 @@ class Element {
 				'ID' => 'DESC'
 			),
 			array(
-					"PRODUCT_ID" => $arFields['ID'],
+					"PRODUCT_ID" => $arFields['PRODUCT_ID'],
 					"CATALOG_GROUP_ID" => 1
 				)
 		);
@@ -144,18 +144,13 @@ class Element {
 	}
 	
 	/**
-	 * После удаления элемента в инфоблоке
+	 * После удаления цены товара
 	 *
 	 * @param array $arFields
 	 * @return void
 	 */
-	public static function onAfterIBlockElementDelete(&$arFields){
+	public static function onPriceDelete(&$arFields){
 		
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
-		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
-
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("delete", $arFields);
 	}
 }
 ?>

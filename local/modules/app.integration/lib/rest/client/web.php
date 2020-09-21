@@ -67,6 +67,12 @@ class Web extends Rest\Client\AbstractBase
 		$response_json = array();
 		$method = "product/".$id."/".$action."/";
 
+		$data['params'] = [
+			'action' => $action,
+			'id' => $id,
+			'method' => 'product'
+		];
+
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
 		p2f(json_encode($data, JSON_UNESCAPED_UNICODE));
 
@@ -97,11 +103,17 @@ class Web extends Rest\Client\AbstractBase
 	{
 		$id = 0;
 		if($action != "add"){
-			$id = $data['id'];
+			$id = $data['ID'];
 		}
 		
 		$response_json = array();
 		$method = "section/".$id."/".$action."/";
+
+		$data['params'] = [
+			'action' => $action,
+			'id' => $id,
+			'method' => 'section'
+		];
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
 		
@@ -134,11 +146,17 @@ class Web extends Rest\Client\AbstractBase
 	{
 		$id = 0;
 		if($action != "add"){
-			$id = $data['id'];
+			$id = $data['ID'];
 		}
 		
 		$response_json = array();
 		$method = "property/".$id."/".$action."/";
+
+		$data['params'] = [
+			'action' => $action,
+			'id' => $id,
+			'method' => 'property'
+		];
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
 		p2f(json_encode($data, JSON_UNESCAPED_UNICODE));
