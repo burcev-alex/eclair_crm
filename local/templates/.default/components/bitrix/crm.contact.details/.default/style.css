@@ -1,0 +1,63 @@
+#crm-entity-search{
+    display: block;
+    padding-bottom: 20px;
+}
+
+#crm-entity-search label{
+    display: block;
+}
+
+.crm-entity-widget-actions-block .crm-entity-widget-toggle-btn {
+    position: relative;
+    display: inline-block;
+    float: left;
+    margin-left: 8px;
+    padding-top: 2px;
+    border-bottom: 1px dashed transparent;
+    color: #333;
+    text-transform: lowercase;
+    letter-spacing: .2px;
+    font-weight: normal;
+    font-size: 13px;
+    line-height: 14px;
+    opacity: .5;
+    cursor: pointer;
+    transition: 300ms all ease;
+}
+
+.crm-entity-widget-actions-block .crm-entity-widget-toggle-btn:hover {
+    border-bottom-color: #6a6f75;
+    color: #6a6f75;
+    opacity: 1;
+}
+
+#add-booking{
+    margin-right:10px;
+}
+
+#deal-categoty-confirm-dialog .main-grid-confirm-content{
+    width: 250px;
+}
+
+#deal-categoty-confirm-dialog select{
+    display: block;
+    box-sizing: border-box;
+    padding: 10px 9px;
+    min-height: 39px;
+    max-width: 100%;
+    width: 100%;
+    outline: none;
+    border: 1px solid #c4c7cc;
+    border-radius: 1px;
+    background-color: #fff;
+    color: #424956;
+    font: 15px/17px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    transition: 220ms all ease;
+}
+
+#popup-window-content-contact-detail-error {
+    padding: 15px;
+    padding-bottom: 0;
+    color: #c6401c;
+    font-weight: bold;
+}

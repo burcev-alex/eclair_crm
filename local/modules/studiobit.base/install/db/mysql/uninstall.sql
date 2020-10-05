@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS b_studiobit_form_field_perms;

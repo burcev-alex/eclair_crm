@@ -39,6 +39,7 @@ $arClassBase = [
 	'\App\Base\Vue' => 'lib/vue.php',
 	'\App\Base\Rest\RestClient' => 'lib/rest/client_api.php',
 	'\App\Base\UserField\PropertyIblock' => 'lib/userfield/propertyiblock.php',
+	'\App\Base\Entity\Crm\ContactTable' => 'lib/entity/crm/contact.php',
 ];
 
 $arClassLib = [];
