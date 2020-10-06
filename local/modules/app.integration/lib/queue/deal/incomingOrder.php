@@ -88,11 +88,13 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
      */
     protected function save($fields)
     {
+        \CModule::IncludeModule('crm');
+        \CModule::IncludeModule('iblock');
         global $APPLICATION;
 
         if ($this->contactId > 0) {
             $dealEntity = new Crm\DealTable();
-            $deal = new \CCrmDeal(false);
+            $objDeal = new \CCrmDeal(false);
 
             try {
                 $fio = $fields['profile']['fullName'];
@@ -108,6 +110,19 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                 // определить стадию сделки
                 $stageId = 'NEW';
 
+                $property = [];
+                foreach ($fields['property']['properties'] as $kProp => $valProp) {
+                    if ($valProp['TYPE'] == 'LOCATION') {
+                        $property[$valProp['NAME']] = implode(' / ', $valProp['VALUE']);
+                    } elseif ($valProp['TYPE'] == 'ENUM') {
+                        foreach ($valProp['VALUE'] as $value) {
+                            $property[$valProp['NAME']] = $valProp['OPTIONS'][$value];
+                        }
+                    } else {
+                        $property[$valProp['NAME']] = implode(' / ', $valProp['VALUE']);
+                    }
+				}
+
                 $fieldOrder = [
                     'SOURCE_ID' => $this->getSourceId(),
                     'CATEGORY_ID' => $this->category,
@@ -119,7 +134,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     'BEGINDATE' => date('d.m.Y H:i:s'),
                     'OPPORTUNITY' => $fields['price'],
                     'CURRENCY_ID' => 'RUB',
-                    'COMMENTS' => '',
+                    'COMMENTS' => $fields['comments'],
                     'DATE_CREATE' => date('d.m.Y H:i:s'),
                     'TYPE_ID' => $typeId,
                     'CONTACT_ID' => $this->contactId,
@@ -134,6 +149,15 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     'CLOSED' => 'N',
                     'ORIGIN_ID' => $fields['id'],
                     'OPPORTUNITY_ACCOUNT' => $fields['price'],
+                    'UF_COMMUNICATION' => $property['Удобный сбособ связи'],
+                    'UF_DELIVERY_AREA' => $property['Район'],
+                    'UF_DELIVERY_STREET' => $property['Улица'],
+                    'UF_DELIVERY_ENTRANCE' => $property['Подъезд'],
+                    'UF_DELIVERY_FLOOR' => $property['Этаж'],
+                    'UF_DELIVERY_APARTMENT' => $property['Квартира'],
+                    'UF_DELIVERY' => 2, // Доставка, самовывоза нет
+                    'UF_DELIVERY_SUM' => $fields['priceDelivery'],
+                    'UF_DELIVERY_COMMENT' => $fields['delivery'], // Способ доставки
                 ];
 
                 // снять проверку обязательных полей
@@ -146,9 +170,19 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                 }
 
                 if (intval($this->dealId) == 0) {
-                    $this->dealId = $deal->Add($fieldOrder);
+                    $this->dealId = $objDeal->Add($fieldOrder);
+                    $productList = $this->saveProduct($fields);
 
-                    $this->saveProduct($fields);
+                    $stringProductList = '';
+                    foreach ($productList as $sort => $itemProduct) {
+                        $tmp = explode('#', $itemProduct['name']);
+                        $itemProduct['name'] = $tmp[0];
+                        $stringProductList .= $itemProduct['name']." (".intval($itemProduct['count'])." шт.)"."\r\n";
+                    }
+                    $fieldOrder = [
+                        'UF_GOODS_TEXT' => $stringProductList
+                    ];
+                    $objDeal->Update($this->dealId, $fieldOrder);
 
                     // обновление воронки
                     \CCrmDeal::RebuildStatistics(
@@ -165,6 +199,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
 
                 $this->responce['dealId'] = $this->dealId;
             } catch (\Exception $e) {
+                p2f($e->getMessage());
                 return false;
             }
         } else {
@@ -186,8 +221,8 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
         $obProduct = new \CCrmProductRow();
 
         // собираем продукты
-		$productList = $this->prepareItems($fields['basket']);
-		
+        $productList = $this->prepareItems($fields['basket']);
+
         foreach ($productList as $sort => $itemProduct) {
             $productItems = [
                 'OWNER_TYPE' => 'D',
@@ -211,62 +246,62 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
 
             $productId = $obProduct->Add($productItems);
         }
+
+        return $productList;
     }
 
     /**
-     * Подготовка корзины к сохранению в сделке
+     * Подготовка корзины к сохранению в сделке.
      *
      * @return array|int|string
      */
     private function prepareItems($arData)
     {
-		$productList = [];
-		foreach ($arData as $product) {
+        $productList = [];
+        foreach ($arData as $product) {
             if (intval($product['price']) == 0) {
                 continue;
-			}
-			
-			$isSimpleProduct = true;
-			$xmlId = $product['property']['PRODUCT.XML_ID'];
-			if(substr_count($product['property']['PRODUCT.XML_ID'], "#") > 0){
-				$tmp = explode("#", $product['property']['PRODUCT.XML_ID']);
-				$xmlId = $tmp[1];
+            }
 
-				$isSimpleProduct = false;
-			}
-			
-			if($isSimpleProduct){
-				$iblockId = $this->getIblockId('catalog');
-			}
-			else{
-				$iblockId = $this->getIblockId('offers');
-			}
+            $isSimpleProduct = true;
+            $xmlId = $product['property']['PRODUCT.XML_ID'];
+            if (substr_count($product['property']['PRODUCT.XML_ID'], '#') > 0) {
+                $tmp = explode('#', $product['property']['PRODUCT.XML_ID']);
+                $xmlId = $tmp[1];
 
-			$productId = 0;
-			$productName = $product['name'];
+                $isSimpleProduct = false;
+            }
+
+            if ($isSimpleProduct) {
+                $iblockId = $this->getIblockId('catalog');
+            } else {
+                $iblockId = $this->getIblockId('offers');
+            }
+
+            $productId = 0;
+            $productName = $product['name'];
 
             // найти товар по артикулу
             $rsElement = \CIBlockElement::GetList([], ['IBLOCK_ID' => $iblockId, 'XML_ID' => $xmlId], false, false, ['ID']);
             while ($arElement = $rsElement->Fetch()) {
-				$arProduct = Base\Tools::getElementByIDWithProps($arElement['ID']);
-				if(array_key_exists("CML2_LINK", $arProduct['PROPERTIES_VALUE'])){
-					$productId = $arProduct['PROPERTIES_VALUE']['CML2_LINK'];
+                $arProduct = Base\Tools::getElementByIDWithProps($arElement['ID']);
+                if (array_key_exists('CML2_LINK', $arProduct['PROPERTIES_VALUE'])) {
+                    $productId = $arProduct['PROPERTIES_VALUE']['CML2_LINK'];
 
-					$partName = [];
-					// собираем свойства, чтобы добавить в название товара
-					foreach($arProduct['PROPERTIES_VALUE'] as $key=>$value){
-						if($key == "CML2_LINK"){
-							continue;
-						}
+                    $partName = [];
+                    // собираем свойства, чтобы добавить в название товара
+                    foreach ($arProduct['PROPERTIES_VALUE'] as $key => $value) {
+                        if ($key == 'CML2_LINK') {
+                            continue;
+                        }
 
-						$partName[] = $arProduct['PROPERTIES'][$key]['VALUE_ENUM'];
-					}
-					$productName .= "(".implode(" / ", $partName)."). #".$arElement['ID'];
-				}
-				else{
-					$productId = $arElement['ID'];
-				}
-			}
+                        $partName[] = $arProduct['PROPERTIES'][$key]['VALUE_ENUM'];
+                    }
+                    $productName .= '('.implode(' / ', $partName).'). #'.$arElement['ID'];
+                } else {
+                    $productId = $arElement['ID'];
+                }
+            }
 
             $productList[] = [
                 'name' => $productName,
@@ -275,10 +310,10 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                 'productId' => $productId,
                 'sku' => $xmlId,
             ];
-		}
-		
-		return $productList;
-	}
+        }
+
+        return $productList;
+    }
 
     /**
      * ID инфоблока.
@@ -307,12 +342,13 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
             // иначе обращаемся к базе
             \CModule::IncludeModule('iblock');
             $res = \CIBlock::GetList(
-                    [],
-                    [
-                        'CODE' => $code,
-                        'ACTIVE' => 'Y',
-                    ], true
-                );
+                [],
+                [
+                    'CODE' => $code,
+                    'ACTIVE' => 'Y',
+                ],
+                true
+            );
             while ($arr = $res->Fetch()) {
                 $result = $arr['ID'];
             }
@@ -322,12 +358,13 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
         if ($obCache->StartDataCache()) {
             \CModule::IncludeModule('iblock');
             $res = \CIBlock::GetList(
-                    [],
-                    [
-                        'CODE' => $code,
-                        'ACTIVE' => 'Y',
-                    ], true
-                );
+                [],
+                [
+                    'CODE' => $code,
+                    'ACTIVE' => 'Y',
+                ],
+                true
+            );
             while ($arr = $res->Fetch()) {
                 $result = $arr['ID'];
             }
