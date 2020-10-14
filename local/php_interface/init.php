@@ -3,7 +3,7 @@
 include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/wsrubi.smtp/classes/general/wsrubismtp.php");
 
 define("LOG_FILENAME", $_SERVER["DOCUMENT_ROOT"]."/log.txt");
-
+require_once ($_SERVER["DOCUMENT_ROOT"]."/local/lib/CSms4bBase.php");
 require_once('app_init.php');
 
 if (!function_exists('p')) {
@@ -95,6 +95,61 @@ if (!function_exists('pr')) {
 		} ?>
 		<?php
 	}
+}
+
+
+function sendByWhatsApp($phone, $msg)
+{
+    $phone = trim($phone, '+');
+    $phone[0] = 7;
+
+    $msg = str_replace('"', '\'', $msg);
+    // Отправка текста
+    $url = 'https://new39066241.wazzup24.com/api/v1.1/send_message';
+    // echo $msg;
+    $data = "
+    {
+    \"transport\": \"whatsapp\",
+    \"from\": \"79913788268\",
+    \"to\": \"$phone\",
+    \"text\": \"$msg\"
+    }";
+
+
+    $options = array(
+        'http' => array(
+            'method' => 'POST',
+            'content' => $data,
+            'header' => "Content-type: application/json\r\n" .
+                "Authorization: 400811b478d64879af044f086e7ba021\r\n"
+        )
+    );
+    $context  = stream_context_create( $options );
+    $result = file_get_contents( $url, false, $context );
+    $response = json_decode( $result );
+    return $response;
+}
+
+function sendSMS($phone,$msg){
+    $LOGIN = 'Abramova';
+    $PASSWORD = '1cbit-abramova';
+
+    $SMS4B = new \Csms4bBase($LOGIN,$PASSWORD);
+
+    $SMS4B->SendSMS($msg,$phone,'ECLAIR CAFE');
+}
+
+
+function generate_string($strength = 4) {
+    $input = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $input_length = strlen($input);
+    $random_string = '';
+    for($i = 0; $i < $strength; $i++) {
+        $random_character = $input[mt_rand(0, $input_length - 1)];
+        $random_string .= $random_character;
+    }
+
+    return $random_string;
 }
 
 

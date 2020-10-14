@@ -1,4 +1,5 @@
 <?
+$PERM["oplata"]["2"]="R";
 $PERM["online"]["*"]="R";
 $PERM["desktop_app"]["*"]="R";
 $PERM["upload"]["*"]="R";
