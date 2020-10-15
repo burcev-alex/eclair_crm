@@ -1,0 +1,89 @@
+#crm-entity-search {
+    font-size: 13px;
+    font-family: 'OpenSans-Regular', "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+#crm-entity-search label{
+    font-size: 13px;
+    font-family: 'OpenSans-Regular', "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+#crm-entity-search-result{
+    min-height: 250px;
+    align-items: start;
+}
+
+#crm-entity-search-result table {
+    width: 100%;
+    font-size: 13px;
+    font-family: 'OpenSans-Regular', "Helvetica Neue", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+}
+
+#crm-entity-search-result table thead tr {
+    border-bottom: 2px #eef2f4 solid;
+    background-color: #fff;
+}
+
+#crm-entity-search-result table td {
+    overflow: hidden;
+    box-sizing: border-box;
+    border-bottom: 1px #eef2f4 solid;
+    background: #fff;
+    -khtml-user-drag: none;
+    -webkit-user-drag: none;
+    position: relative;
+    padding: 16px 16px 16px;
+    color: #535c69;
+    vertical-align: middle;
+    font-size: 13px;
+}
+
+#crm-entity-search-result table thead th {
+    position: relative;
+    box-sizing: border-box;
+    min-width: 70px;
+    height: 48px;
+    border-bottom: 3px #eef2f4 solid;
+    background-color: #fff;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: background-color .3s cubic-bezier(.000, .465, .750, .750);
+    white-space: nowrap;
+    padding: 16px 16px 16px;
+}
+
+#crm-entity-search-result table thead th span{
+    z-index: 7;
+    display: inline-block;
+    overflow: hidden;
+    padding-right: 21px;
+    max-width: 100%;
+    color: #535c69;
+    text-align: left;
+    text-transform: uppercase;
+    -ms-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    font-weight: normal;
+    font-size: 11px;
+    font-family: 'OpenSans-Semibold', "Helvetica Neue", Arial, Helvetica, sans-serif;
+    line-height: 12px;
+}
+
+#crm-entity-search-result span.crm-entity-search-result-empty{
+    font-family: 'OpenSans-Semibold', "Helvetica Neue", Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    text-align: center;
+    font-style: italic;
+    display:block;
+    width:100%;
+}
+
+#crm-entity-search-result tr.crm-entity-search-result-empty td{
+    font-family: 'OpenSans-Semibold', "Helvetica Neue", Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    text-align: center;
+    font-style: italic;
+}

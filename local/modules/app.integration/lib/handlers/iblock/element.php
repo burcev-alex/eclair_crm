@@ -24,11 +24,11 @@ class Element {
 		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
 
 		if(IntVal($data['PREVIEW_PICTURE']) > 0){
-			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);
+			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PREVIEW_PICTURE']);
 		}
 
 		if(IntVal($data['DETAIL_PICTURE']) > 0){
-			$data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['DETAIL_PICTURE']);
+			$data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['DETAIL_PICTURE']);
 		}
 
 		foreach ($data['PROPERTIES'] as $propertyCode => $propValues) {

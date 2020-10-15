@@ -1,0 +1,3 @@
+<?
+$MESS["STUDIOBIT_FIELD_OBJECTS_EMPTY"] = "Пусто";
+?>

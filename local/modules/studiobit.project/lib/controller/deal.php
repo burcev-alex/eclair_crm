@@ -125,6 +125,35 @@ class Deal extends Prototype
             $componentResult
         );		
     }
+    public function sendlinkbywaAction()
+    {
+        $PHONE = $this->getParam("PHONE");
+        $LINK = $this->getParam("LINK");
+
+        $this->view = new View\Html();
+        $this->returnAsIs = true;
+
+        $text = 'Ссылка для оплаты Вашего заказа: '.$LINK;
+
+        $res = sendByWhatsApp($PHONE,$text);
+
+        return \Bitrix\Main\Web\Json::encode(['result'=>$res]);
+    }
+
+    public function sendlinkbysmsAction()
+    {
+        $PHONE = $this->getParam("PHONE");
+        $LINK = $this->getParam("LINK");
+
+        $this->view = new View\Html();
+        $this->returnAsIs = true;
+
+        $text = 'Ссылка для оплаты Вашего заказа: '.$LINK;
+
+        $res = sendSMS($PHONE,$text);
+
+        return \Bitrix\Main\Web\Json::encode(['result'=>$res]);
+    }
 
     public function paymentScheduleAddAction()
     {
