@@ -183,19 +183,26 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                         'UF_GOODS_TEXT' => $stringProductList
                     ];
                     $objDeal->Update($this->dealId, $fieldOrder);
+				}
+				else{
+					$fieldOrder = [
+						'UF_PAYMENT' => array_key_exists('payed', $fields) ? $fields['payed'] : 0
+					];
 
-                    // обновление воронки
-                    \CCrmDeal::RebuildStatistics(
-                        [$this->dealId],
-                        [
-                            'FORCED' => true,
-                            'ENABLE_SUM_STATISTICS' => true,
-                            'ENABLE_HISTORY' => true,
-                            'ENABLE_INVOICE_STATISTICS' => true,
-                            'ENABLE_ACTIVITY_STATISTICS' => true,
-                        ]
-                    );
-                }
+					$objDeal->Update($this->dealId, $fieldOrder);
+				}
+
+				// обновление воронки
+				\CCrmDeal::RebuildStatistics(
+					[$this->dealId],
+					[
+						'FORCED' => true,
+						'ENABLE_SUM_STATISTICS' => true,
+						'ENABLE_HISTORY' => true,
+						'ENABLE_INVOICE_STATISTICS' => true,
+						'ENABLE_ACTIVITY_STATISTICS' => true,
+					]
+				);
 
                 $this->responce['dealId'] = $this->dealId;
             } catch (\Exception $e) {
