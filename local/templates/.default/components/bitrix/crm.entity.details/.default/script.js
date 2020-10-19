@@ -860,7 +860,7 @@ if(typeof BX.Crm.EntityDetailFactory === "undefined")
 			{
 				return BX.Crm.OrderDetailManager.create(id, settings);
 			}
-			
+
 			return BX.Crm.EntityDetailManager.create(id, settings);
 		}
 	}
@@ -1040,6 +1040,28 @@ if(typeof BX.Crm.EntityDetailTab === "undefined")
 			this._container.style.top = 0;
 			this._container.style.left = 0;
 			this._container.style.width = "100%";
+
+			if (this._data.id === 'tab_products') {
+				var button =  '<span id="deal_product_editor_custom_add_product_button" class="webform-small-button">'
+					+	'<span class="webform-small-button-left"></span>'
+					+	'<span class="webform-small-button-text">Выбрать новый товар</span>'
+					+	'<span class="webform-small-button-right"></span>'
+					+ '</span>';
+
+				if (!$('#deal_product_editor_custom_add_product_button').length) {
+					$('#crm-l-space').append(button);
+					$( document ).on( "click", "#deal_product_editor_custom_add_product_button", function() {
+						(new BX.CDialog({
+							'content_url': '/ajax/project/deal/getDialogAddProduct/',
+							'content_post': '',
+							'width':400,
+							'height':400
+						})).Show();
+					});
+				}
+			}
+
+
 
 			var showTab = new BX.easing({
 				duration : 350,
