@@ -368,6 +368,7 @@ input.pagetitle-item {
 #deal_product_editor_select_product_button,
 #deal_product_editor_add_product_button,
 .crm-items-table-tax,
-.crm-item-unit {
+.crm-item-unit,
+#deal_product_editor_add_row_button {
 	display: none;
 }
