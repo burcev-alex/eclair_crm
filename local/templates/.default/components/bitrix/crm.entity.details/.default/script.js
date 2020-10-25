@@ -1,5 +1,6 @@
 BX.namespace("BX.Crm");
 
+var _dialogChoiceProduct = null;
 //region MANAGER
 if(typeof BX.Crm.EntityDetailManager === "undefined")
 {
@@ -16,7 +17,6 @@ if(typeof BX.Crm.EntityDetailManager === "undefined")
 		this._pageUrlCopyButton = null;
 		this._externalEventHandler = null;
 		this._externalRequestData = null;
-		this._dialogChoiceProduct = null;
 	};
 	BX.Crm.EntityDetailManager.prototype =
 	{
@@ -1052,12 +1052,13 @@ if(typeof BX.Crm.EntityDetailTab === "undefined")
 				if (!$('#deal_product_editor_custom_add_product_button').length) {
 					$('#crm-l-space').append(button);
 					$( document ).on( "click", "#deal_product_editor_custom_add_product_button", function() {
-						this._dialogChoiceProduct = (new BX.CDialog({
+						_dialogChoiceProduct = new BX.CDialog({
 							'content_url': '/ajax/project/deal/getDialogAddProduct/',
 							'content_post': '',
 							'width': '800',
 							'height':'800'
-						})).Show();
+						});
+						_dialogChoiceProduct.Show();
 					});
 				}
 			}
@@ -1488,7 +1489,13 @@ $(document).ready(function() {
 				var html = '';
 				var i = 0;
 				for (key in data['LIST']) {
-					html += "<div data-price=" + data['LIST'][key].PRICE + " data-inputID=" + data['LIST'][key].ID + " class='itemInput itemInput" + i + "'>" + [data['LIST'][key].NAME].toString() + "</div>";
+					html += "<div " +
+						"data-price='" + data['LIST'][key].PRICE
+						+ "' data-currency='" + data['LIST'][key].CURRENCY + "'"
+						+ " data-inputID='" + data['LIST'][key].ID + "'"
+						+ " data-name='" + data['LIST'][key].NAME + "'"
+						+ " class='itemInput itemInput" + i + "'>"
+						+ [data['LIST'][key].NAME].toString() + [data['LIST'][key].PRICE_TEXT].toString() + "</div>";
 					i++;
 				}
 
@@ -1502,7 +1509,7 @@ $(document).ready(function() {
 	$(document).on('click',".crm-entity-widget-content-block-autocomplete-container .itemInput", function(){
 		var input_id = $(this).attr("data-inputID");
 		var price = $(this).attr("data-price");
-		var input_name = $(this).text();
+		var input_name = $(this).attr("data-name");
 		$('#ajaxInputResult').val(input_id);
 		$('.mli-search-result-input').removeClass('active');
 		$('#ajaxInput').val(input_name);
@@ -1523,8 +1530,7 @@ $(document).ready(function() {
 			};
 		prodEditor._addItem(itemData, true);
 
-		top.BX.WindowManager.Get().Close();
-		// Какая нибудь отправка данных, если это не обходимо, должна быть тут
+		_dialogChoiceProduct.Close();
 		return false;
 	});
 

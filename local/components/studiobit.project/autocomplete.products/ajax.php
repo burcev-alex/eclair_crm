@@ -83,8 +83,10 @@ if ($cache->initCache(3600, "product_choice_".md5($search))) {
                 'NAME' => $arItem['NAME'] . (empty($additional) ? '' : ' / ') . implode(
                         ' / ',
                         $additional
-                    ) . ', ' . $arItem['CATALOG_PRODUCT_PRICE_PRICE'] . ' ' . $arItem['CATALOG_PRODUCT_PRICE_CURRENCY'],
-                'PRICE' => $arItem['CATALOG_PRODUCT_PRICE_PRICE']
+                    ),
+                'PRICE' => $arItem['CATALOG_PRODUCT_PRICE_PRICE'],
+                'CURRENCY' => $arItem['CATALOG_PRODUCT_PRICE_CURRENCY'],
+                'PRICE_TEXT' =>  ', ' . $arItem['CATALOG_PRODUCT_PRICE_PRICE'] . ' ' . $arItem['CATALOG_PRODUCT_PRICE_CURRENCY'],
             ];
     }
 
