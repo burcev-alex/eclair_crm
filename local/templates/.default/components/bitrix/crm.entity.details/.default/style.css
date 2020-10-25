@@ -365,6 +365,9 @@ input.pagetitle-item {
 	font-weight: 400;
 }
 
-#deal_product_editor_select_product_button, #deal_product_editor_add_product_button {
+#deal_product_editor_select_product_button,
+#deal_product_editor_add_product_button,
+.crm-items-table-tax,
+.crm-item-unit {
 	display: none;
 }

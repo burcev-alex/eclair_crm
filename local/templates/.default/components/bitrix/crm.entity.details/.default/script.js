@@ -1,6 +1,12 @@
 BX.namespace("BX.Crm");
 
 var _dialogChoiceProduct = null;
+
+function readonlyFields() {
+	$('div[data-tab-id=tab_products] .crm-item-name input').prop("readonly", true);
+	$('div[data-tab-id=tab_products] select.crm-item-table-select').prop("readonly", true);
+}
+
 //region MANAGER
 if(typeof BX.Crm.EntityDetailManager === "undefined")
 {
@@ -1061,6 +1067,7 @@ if(typeof BX.Crm.EntityDetailTab === "undefined")
 						_dialogChoiceProduct.Show();
 					});
 				}
+				readonlyFields();
 			}
 
 
@@ -1530,6 +1537,7 @@ $(document).ready(function() {
 			};
 		prodEditor._addItem(itemData, true);
 
+		readonlyFields();
 		_dialogChoiceProduct.Close();
 		return false;
 	});
