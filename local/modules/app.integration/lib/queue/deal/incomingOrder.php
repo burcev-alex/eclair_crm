@@ -151,6 +151,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     'OPPORTUNITY_ACCOUNT' => $fields['price'],
                     'UF_COMMUNICATION' => $property['Удобный сбособ связи'],
                     'UF_DELIVERY_AREA' => $property['Район'],
+                    'UF_DELIVERY_DATE' => $property['Желаемая дата и время доставки'],
                     'UF_DELIVERY_STREET' => $property['Улица'],
                     'UF_DELIVERY_ENTRANCE' => $property['Подъезд'],
                     'UF_DELIVERY_FLOOR' => $property['Этаж'],
