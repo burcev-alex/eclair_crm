@@ -204,7 +204,7 @@ class Tools
 
 		return $result;
 	}
-	
+
 	/**
 	 * Возвращает id пользовательского свойства типа "список", по XML_ID
 	 *
@@ -796,12 +796,12 @@ class Tools
 
         if(!Loader::includeModule('iblock'))
             return $return;
-        
+
         $iblockId = intval(\COption::GetOptionInt('intranet', 'iblock_structure'));
-        
+
         $departmentIDs = [$departmentId];
 
-        if($recursive || $withHeads) 
+        if($recursive || $withHeads)
         {
             $rsSection = \CIBlockSection::GetList(
                 [],
@@ -812,12 +812,12 @@ class Tools
                 false,
                 ['ID', 'LEFT_MARGIN', 'RIGHT_MARGIN', 'IBLOCK_ID', 'UF_HEAD']
             );
-            
+
             if($arSection = $rsSection->Fetch()) {
                 if ($arSection['UF_HEAD'] > 0 && $withHeads){
                     $return[$arSection['UF_HEAD']] = $arSection['UF_HEAD'];
                 }
-            
+
                 if($recursive){
                     $rsChild = \CIBlockSection::GetList(
                         [],
@@ -829,13 +829,13 @@ class Tools
                         false,
                         ['ID', 'IBLOCK_ID', 'UF_HEAD']
                     );
-                    
+
                     while($arChild = $rsChild->Fetch())
                     {
                         if ($arChild['UF_HEAD'] > 0 && $withHeads){
                             $return[$arChild['UF_HEAD']] = $arChild['UF_HEAD'];
                         }
-                        
+
                         $departmentIDs[] = $arChild['ID'];
                     }
                 }
@@ -843,10 +843,10 @@ class Tools
         }
 
         $rsUsers = \CUser::GetList(
-            $by = 'id', 
-            $order = 'asc', 
+            $by = 'id',
+            $order = 'asc',
             [
-                'UF_DEPARTMENT' => $departmentIDs, 
+                'UF_DEPARTMENT' => $departmentIDs,
                 'ACTIVE' => 'Y'
             ],
             ['FIELDS' => ['ID']]
@@ -876,5 +876,59 @@ class Tools
         }
 
         return $return;
+    }
+
+    /**
+     * Возвращает ID инфоблока по его коду
+     *
+     * @access public
+     *
+     * @param string $code Код инфоблока
+     * @param string $iblockType ID типа инфоблока, по умолчанию null
+     * @param string $site_id ID сайта, в котором искать инфоблок, по умолчанию SITE_ID
+     *
+     * @return int
+     *
+     * @example
+     * <pre>
+     * $code = "stickers";
+     * $iblockType = "services";
+     * $id = CARTIBlockTools::GetIDByCode($code, $iblockType, $site_id);
+     * </pre>
+     *
+     */
+    public static function GetIDByCode($code, $iblockType=null, $site_id=SITE_ID)
+    {
+        if(!\CModule::IncludeModule("iblock"))
+        {
+            $GLOBALS["APPLICATION"]->ThrowException('Модуль инфоблоков не установлен');
+            return false;
+        }
+        else
+        {
+            if(
+                /*(defined("ADMIN_SECTION") && ADMIN_SECTION == true)
+                || */empty($site_id)
+                || !strlen($code)
+            )
+                return 0;
+
+
+            $arFilter = array(
+                "ACTIVE"	=> "Y",
+                "SITE_ID"	=> $site_id,
+                "CODE"		=> $code,
+                "MIN_PERMISSION"=> "R"
+            );
+
+            if(null != $iblockType)
+                $arFilter["TYPE"] = $iblockType;
+            $result = 0;
+            $rs = \CIBlock::GetList(array(), $arFilter, false);
+            if($ar = $rs->Fetch())
+                $result = $ar["ID"];
+
+            return $result;
+        }
     }
 }
