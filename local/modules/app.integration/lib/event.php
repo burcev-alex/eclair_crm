@@ -22,6 +22,7 @@ class Event
 		$eventManager = Main\EventManager::getInstance();
 
 		// element of iblock
+		$eventManager->addEventHandler('iblock', 'OnBeforeIBlockElementAdd', ['\App\Integration\Handlers\Iblock\Element', 'onBeforeIBlockElementAdd']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockElementAdd', ['\App\Integration\Handlers\Iblock\Element', 'onAfterIBlockElementAdd']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockElementUpdate', ['\App\Integration\Handlers\Iblock\Element', 'onAfterIBlockElementUpdate']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockElementDelete', ['\App\Integration\Handlers\Iblock\Element', 'onAfterIBlockElementDelete']);
@@ -32,6 +33,7 @@ class Event
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockPropertyDelete', ['\App\Integration\Handlers\Iblock\Property', 'onAfterIBlockPropertyDelete']);
 
 		// sections of iblock
+		$eventManager->addEventHandler('iblock', 'OnBeforeIBlockSectionAdd', ['\App\Integration\Handlers\Iblock\Section', 'onBeforeIBlockSectionAdd']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionAdd', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionAdd']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionUpdate', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionUpdate']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionDelete', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionDelete']);

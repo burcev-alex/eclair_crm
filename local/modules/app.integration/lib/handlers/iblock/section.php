@@ -8,6 +8,17 @@ use \App\Integration as Union;
 
 class Section {
 	/**
+	 * До добавления раздела в инфоблок
+	 *
+	 * @param array $arFields
+	 * @return void
+	 */
+	public static function onBeforeIBlockSectionAdd(&$arFields){
+		$arFields['XML_ID'] = randString(12);
+		$arFields['EXTERNAL_ID'] = $arFields['XML_ID'];
+	}
+
+	/**
 	 * После добавления раздела в инфоблок
 	 *
 	 * @param array $arFields
