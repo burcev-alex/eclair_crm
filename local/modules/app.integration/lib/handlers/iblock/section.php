@@ -27,6 +27,10 @@ class Section {
 	public static function onAfterIBlockSectionAdd(&$arFields){
 		
 		$arFields['PARENT'] = Base\Tools::getParentSection($arFields['ID']);
+		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $arFields["IBLOCK_ID"], 'ID' => $arFields["IBLOCK_SECTION_ID"]));
+		if($arSection = $dbSection->Fetch()){
+			$arFields['IBLOCK_SECTION_DATA'] = $arSection;
+		}
 
 		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
 		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
@@ -48,6 +52,10 @@ class Section {
 	public static function onAfterIBlockSectionUpdate(&$arFields){
 
 		$arFields['PARENT'] = Base\Tools::getParentSection($arFields['ID']);
+		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $arFields["IBLOCK_ID"], 'ID' => $arFields["IBLOCK_SECTION_ID"]));
+		if($arSection = $dbSection->Fetch()){
+			$arFields['IBLOCK_SECTION_DATA'] = $arSection;
+		}
 
 		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
 		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
