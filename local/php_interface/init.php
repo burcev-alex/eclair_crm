@@ -110,7 +110,7 @@ function sendByWhatsApp($phone, $msg)
     $data = "
     {
     \"transport\": \"whatsapp\",
-    \"from\": \"79913788268\",
+    \"from\": \"79659994622\",
     \"to\": \"$phone\",
     \"text\": \"$msg\"
     }";
@@ -136,7 +136,8 @@ function sendSMS($phone,$msg){
 
     $SMS4B = new \Csms4bBase($LOGIN,$PASSWORD);
 
-    $SMS4B->SendSMS($msg,$phone,'ECLAIR CAFE');
+    $result = $SMS4B->SendSMS($msg,$phone,'ECLAIR CAFE');
+    return $result;
 }
 
 
@@ -168,4 +169,54 @@ function myDeliveryFunction()
             '\MyDeliveryRestriction' => '/local/php_interface/include/mydelrestriction.php',
         )
     );
+}
+
+AddEventHandler('crm', 'OnActivityModified', "OnActivityModifiedFunction");
+
+function OnActivityModifiedFunction($before, $current)
+{
+	p2log($before);
+	p2log($current);
+
+    if (
+        $current['COMPLETED'] === 'Y'
+        && $current['COMPLETED'] != $before['COMPLETED']
+        && $current['OWNER_TYPE_ID'] == '2'
+    ) {
+        CModule::IncludeModule("crm");
+        $arDealItem = CCrmDeal::GetList(["ID" => "AC"], ["ID" => IntVal($current['OWNER_ID'])], [])->GetNext();
+        p2log($arDealItem);
+		if (
+			!empty($arDealItem['CLOSEDATE'])
+        ) {
+            $date = DateTime::createFromFormat('d.m.Y H:i:s', $arDealItem['DATE_MODIFY']);
+
+			$timeZone = new \DateTimeZone('Europe/Moscow');
+            $now = new DateTime();
+
+			$now->setTimeZone($timeZone);
+			$date->setTimeZone($timeZone);
+
+            $diff = $now->getTimestamp() - $date->getTimestamp();
+			p2log($date);
+			p2log($now);
+			p2log($diff);
+            if (
+				$diff < 10
+				|| (
+					$diff >= 14395
+					&& $diff <= 14405
+					)
+				) {
+                $res = \CCrmActivity::Update(
+                    $current['ID'],
+                    ['COMPLETED' => 'N'],
+                    false,
+                    false,
+                    ['REGISTER_SONET_EVENT' => false]
+                );
+				p2log($res);
+            }
+        }
+    }
 }
