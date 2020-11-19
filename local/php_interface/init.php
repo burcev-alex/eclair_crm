@@ -3,7 +3,7 @@
 include_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/wsrubi.smtp/classes/general/wsrubismtp.php");
 
 define("LOG_FILENAME", $_SERVER["DOCUMENT_ROOT"]."/log.txt");
-
+require_once ($_SERVER["DOCUMENT_ROOT"]."/local/lib/CSms4bBase.php");
 require_once('app_init.php');
 
 if (!function_exists('p')) {
@@ -98,6 +98,62 @@ if (!function_exists('pr')) {
 }
 
 
+function sendByWhatsApp($phone, $msg)
+{
+    $phone = trim($phone, '+');
+    $phone[0] = 7;
+
+    $msg = str_replace('"', '\'', $msg);
+    // Отправка текста
+    $url = 'https://new39066241.wazzup24.com/api/v1.1/send_message';
+    // echo $msg;
+    $data = "
+    {
+    \"transport\": \"whatsapp\",
+    \"from\": \"79659994622\",
+    \"to\": \"$phone\",
+    \"text\": \"$msg\"
+    }";
+
+
+    $options = array(
+        'http' => array(
+            'method' => 'POST',
+            'content' => $data,
+            'header' => "Content-type: application/json\r\n" .
+                "Authorization: 400811b478d64879af044f086e7ba021\r\n"
+        )
+    );
+    $context  = stream_context_create( $options );
+    $result = file_get_contents( $url, false, $context );
+    $response = json_decode( $result );
+    return $response;
+}
+
+function sendSMS($phone,$msg){
+    $LOGIN = 'Abramova';
+    $PASSWORD = '1cbit-abramova';
+
+    $SMS4B = new \Csms4bBase($LOGIN,$PASSWORD);
+
+    $result = $SMS4B->SendSMS($msg,$phone,'ECLAIR CAFE');
+    return $result;
+}
+
+
+function generate_string($strength = 4) {
+    $input = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $input_length = strlen($input);
+    $random_string = '';
+    for($i = 0; $i < $strength; $i++) {
+        $random_character = $input[mt_rand(0, $input_length - 1)];
+        $random_string .= $random_character;
+    }
+
+    return $random_string;
+}
+
+
 
 Bitrix\Main\EventManager::getInstance()->addEventHandler(
     'sale',
@@ -113,4 +169,54 @@ function myDeliveryFunction()
             '\MyDeliveryRestriction' => '/local/php_interface/include/mydelrestriction.php',
         )
     );
+}
+
+AddEventHandler('crm', 'OnActivityModified', "OnActivityModifiedFunction");
+
+function OnActivityModifiedFunction($before, $current)
+{
+	p2log($before);
+	p2log($current);
+	
+    if (
+        $current['COMPLETED'] === 'Y'
+        && $current['COMPLETED'] != $before['COMPLETED']
+        && $current['OWNER_TYPE_ID'] == '2'
+    ) {
+        CModule::IncludeModule("crm");
+        $arDealItem = CCrmDeal::GetList(["ID" => "AC"], ["ID" => IntVal($current['OWNER_ID'])], [])->GetNext();
+        p2log($arDealItem);
+		if (
+			!empty($arDealItem['CLOSEDATE'])
+        ) {
+            $date = DateTime::createFromFormat('d.m.Y H:i:s', $arDealItem['DATE_MODIFY']);
+			
+			$timeZone = new \DateTimeZone('Europe/Moscow');			
+            $now = new DateTime();
+			
+			$now->setTimeZone($timeZone);
+			$date->setTimeZone($timeZone);
+			
+            $diff = $now->getTimestamp() - $date->getTimestamp();
+			p2log($date);
+			p2log($now);
+			p2log($diff);
+            if (
+				$diff < 10
+				|| (
+					$diff >= 14395 
+					&& $diff <= 14405
+					)
+				) {
+                $res = \CCrmActivity::Update(
+                    $current['ID'],
+                    ['COMPLETED' => 'N'],
+                    false,
+                    false,
+                    ['REGISTER_SONET_EVENT' => false]
+                );
+				p2log($res);
+            }
+        }
+    }
 }
