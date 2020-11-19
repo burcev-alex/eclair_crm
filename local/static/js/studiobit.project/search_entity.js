@@ -6,7 +6,7 @@ $(function(){
         $.Studiobit.Project = {};
 
     $.Studiobit.Project.searchEntity = function(options){
-        this.options = options;		
+        this.options = options;
         this.editor = BX.Crm.EntityEditor.getDefault();
         this.ajaxUrl = '';
         this.init();
@@ -37,10 +37,10 @@ $(function(){
 
     $.Studiobit.Project.searchEntity.prototype.addButtons = function(){
         var self = this;
-																
-        var control = $('.crm-entity-section-control');
+
+        var control = $('.ui-entity-section-control');
         if (control) {
-						
+
             $('.ui-btn-success', control).hide();
             self.btnNext = $('<a class="ui-btn ui-btn-primary">Продолжить</a>');
             control.prepend(self.btnNext);
@@ -58,9 +58,9 @@ $(function(){
 
                 return false;
             });
-			
-			$('.crm-entity-section-control').parents('.crm-entity-wrap').addClass('crm-section-control-active');
-			
+
+			$('.ui-entity-section-control').parents('.ui-entity-wrap').addClass('crm-section-control-active');
+
         }
     };
 

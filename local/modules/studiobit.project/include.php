@@ -103,14 +103,14 @@ Loader::registerAutoLoadClasses(
     )
 );
 
-\CJSCore::RegisterExt(
-    "studiobit_project_timeline",
-    array(
-        "js" => "/local/static/js/".MODULE_ID."/timeline.js",
-        "css" => "/local/static/css/".MODULE_ID."/timeline.css",
-        "rel" => Array("studiobit_project", "masked_input")
-    )
-);
+//\CJSCore::RegisterExt(
+//    "studiobit_project_timeline",
+//    array(
+//        "js" => "/local/static/js/".MODULE_ID."/timeline.js",
+//        "css" => "/local/static/css/".MODULE_ID."/timeline.css",
+//        "rel" => Array("studiobit_project", "masked_input")
+//    )
+//);
 
 \CJSCore::RegisterExt(
     "studiobit_project_favorite",
