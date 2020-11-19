@@ -31,9 +31,14 @@ class Main extends Rest\Api
 
 		$this->apiKey = Config\Option::get('app.integration', 'server_rest_api');
 
-		if (!array_key_exists('x-apikey', $this->headers)) {
+		$arrHeaders = [];
+		foreach($this->headers as $key=>$value){
+			$arrHeaders[mb_strtolower($key)] = $value;
+		}
+
+		if (!array_key_exists('x-apikey', $arrHeaders)) {
             throw new \Exception('No API Key provided');
-        } elseif ($this->apiKey != $this->headers['x-apikey']) {
+        } elseif ($this->apiKey != $arrHeaders['x-apikey']) {
             throw new \Exception('Invalid API Key');
         }
 

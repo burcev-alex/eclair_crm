@@ -177,7 +177,7 @@ function OnActivityModifiedFunction($before, $current)
 {
 	p2log($before);
 	p2log($current);
-	
+
     if (
         $current['COMPLETED'] === 'Y'
         && $current['COMPLETED'] != $before['COMPLETED']
@@ -190,13 +190,13 @@ function OnActivityModifiedFunction($before, $current)
 			!empty($arDealItem['CLOSEDATE'])
         ) {
             $date = DateTime::createFromFormat('d.m.Y H:i:s', $arDealItem['DATE_MODIFY']);
-			
-			$timeZone = new \DateTimeZone('Europe/Moscow');			
+
+			$timeZone = new \DateTimeZone('Europe/Moscow');
             $now = new DateTime();
-			
+
 			$now->setTimeZone($timeZone);
 			$date->setTimeZone($timeZone);
-			
+
             $diff = $now->getTimestamp() - $date->getTimestamp();
 			p2log($date);
 			p2log($now);
@@ -204,7 +204,7 @@ function OnActivityModifiedFunction($before, $current)
             if (
 				$diff < 10
 				|| (
-					$diff >= 14395 
+					$diff >= 14395
 					&& $diff <= 14405
 					)
 				) {

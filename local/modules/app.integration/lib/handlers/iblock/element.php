@@ -9,6 +9,17 @@ use \App\Integration as Union;
 class Element {
 	
 	/**
+	 * До добавления элемента в инфоблок
+	 *
+	 * @param array $arFields
+	 * @return void
+	 */
+	public static function onBeforeIBlockElementAdd(&$arFields){
+		$arFields['XML_ID'] = randString(12);
+		$arFields['EXTERNAL_ID'] = $arFields['XML_ID'];
+	}
+	
+	/**
 	 * После добавления элемента в инфоблок
 	 *
 	 * @param array $arFields
@@ -19,6 +30,19 @@ class Element {
 		\CModule::IncludeModule('iblock');
 
 		$data = Base\Tools::getElementByIDWithProps($arFields['ID']);
+
+		$externalSectionId = false;
+		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $arFields["IBLOCK_ID"], 'ID' => $arFields["IBLOCK_SECTION_ID"]));
+		if($arSection = $dbSection->Fetch()){
+			$data['IBLOCK_SECTION_DATA'] = $arSection;
+			$externalSectionId = $arSection['XML_ID'] ? $arSection['XML_ID'] : $arSection['CODE'];
+		}
+		else{
+			$data['IBLOCK_SECTION_DATA'] = [];
+		}
+
+		$data['IBLOCK_SECTION_ID'] = $externalSectionId;
+		
 
 		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
 		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
@@ -89,6 +113,18 @@ class Element {
 
 		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
 		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+
+		$externalSectionId = false;
+		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $arFields["IBLOCK_ID"], 'ID' => $arFields["IBLOCK_SECTION_ID"]));
+		if($arSection = $dbSection->Fetch()){
+			$data['IBLOCK_SECTION_DATA'] = $arSection;
+			$externalSectionId = $arSection['XML_ID'] ? $arSection['XML_ID'] : $arSection['CODE'];
+		}
+		else{
+			$data['IBLOCK_SECTION_DATA'] = [];
+		}
+
+		$data['IBLOCK_SECTION_ID'] = $externalSectionId;
 
 		if(IntVal($data['PREVIEW_PICTURE']) > 0){
 			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);

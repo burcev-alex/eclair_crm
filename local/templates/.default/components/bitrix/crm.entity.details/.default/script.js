@@ -1,5 +1,12 @@
 BX.namespace("BX.Crm");
 
+var _dialogChoiceProduct = null;
+
+function readonlyFields() {
+	$('div[data-tab-id=tab_products] .crm-item-name input').prop("readonly", true);
+	$('div[data-tab-id=tab_products] select.crm-item-table-select').prop("readonly", true);
+}
+
 //region MANAGER
 if(typeof BX.Crm.EntityDetailManager === "undefined")
 {
@@ -860,7 +867,7 @@ if(typeof BX.Crm.EntityDetailFactory === "undefined")
 			{
 				return BX.Crm.OrderDetailManager.create(id, settings);
 			}
-			
+
 			return BX.Crm.EntityDetailManager.create(id, settings);
 		}
 	}
@@ -1040,6 +1047,30 @@ if(typeof BX.Crm.EntityDetailTab === "undefined")
 			this._container.style.top = 0;
 			this._container.style.left = 0;
 			this._container.style.width = "100%";
+
+			if (this._data.id === 'tab_products') {
+				var button =  '<span id="deal_product_editor_custom_add_product_button" class="webform-small-button">'
+					+	'<span class="webform-small-button-left"></span>'
+					+	'<span class="webform-small-button-text">Выбрать товар</span>'
+					+	'<span class="webform-small-button-right"></span>'
+					+ '</span>';
+
+				if (!$('#deal_product_editor_custom_add_product_button').length) {
+					$('#crm-l-space').append(button);
+					$( document ).on( "click", "#deal_product_editor_custom_add_product_button", function() {
+						_dialogChoiceProduct = new BX.CDialog({
+							'content_url': '/ajax/project/deal/getDialogAddProduct/',
+							'content_post': '',
+							'width': '800',
+							'height':'800'
+						});
+						_dialogChoiceProduct.Show();
+					});
+				}
+				readonlyFields();
+			}
+
+
 
 			var showTab = new BX.easing({
 				duration : 350,
@@ -1432,3 +1463,83 @@ BX.ready(function() {
     }
 });
 //custom endregion
+
+$(document).ready(function() {
+	var search, ajax;
+
+	$( document ).on( "keyup", "#crm-entity-widget-content-products-choice", function() {
+		search = $(this).val();
+
+		if (ajax != null) {
+			ajax.abort();
+		}
+
+		ajax = $.ajax({
+			url: "/local/components/studiobit.project/autocomplete.products/ajax.php",
+			type: "GET",
+			dataType: "json",
+			data: {search:search},
+		}).done(function(data){
+			if (data['COUNT']) {
+				$('.crm-entity-widget-content-block-result').text('');
+				$('.crm-entity-widget-content-block-result').addClass('active');
+				var html = "";
+				// Скрытие всплывающего окна, если кликнули мимо
+				$(document).mouseup(function (e) {
+					var div = $(".crm-entity-widget-content-block-autocomplete-container"); // тут указываем ID элемента
+					if (!div.is(e.target) // если клик был не по нашему блоку
+						&& div.has(e.target).length === 0) { // и не по его дочерним элементам
+						div.removeClass('active'); // скрываем его
+					}
+				});
+
+				var html = '';
+				var i = 0;
+				for (key in data['LIST']) {
+					html += "<div " +
+						"data-price='" + data['LIST'][key].PRICE
+						+ "' data-currency='" + data['LIST'][key].CURRENCY + "'"
+						+ " data-inputID='" + data['LIST'][key].ID + "'"
+						+ " data-name='" + data['LIST'][key].NAME + "'"
+						+ " class='itemInput itemInput" + i + "'>"
+						+ [data['LIST'][key].NAME].toString() + [data['LIST'][key].PRICE_TEXT].toString() + "</div>";
+					i++;
+				}
+
+				$('.crm-entity-widget-content-block-result').append(html);
+			} else {
+				$('.crm-entity-widget-content-block-result').text('Товары не найдены');
+			}
+		});
+	});
+
+	$(document).on('click',".crm-entity-widget-content-block-autocomplete-container .itemInput", function(){
+		var input_id = $(this).attr("data-inputID");
+		var price = $(this).attr("data-price");
+		var input_name = $(this).attr("data-name");
+		$('#ajaxInputResult').val(input_id);
+		$('.mli-search-result-input').removeClass('active');
+		$('#ajaxInput').val(input_name);
+
+		var prodEditor = BX.CrmProductEditor.getDefault();
+
+		var measure = {};
+		var itemData =
+			{
+				id: input_id,
+				name: input_name,
+				quantity: 1.0,
+				price: typeof(price) != 'undefined' ? parseFloat(price) : 0.0,
+				customized: false,
+				measureCode: typeof(measure['code']) !== 'undefined' ? parseInt(measure['code']) : 0,
+				measureName: typeof(measure['name']) !== 'undefined' ? measure['name'] : '',
+				tax:  {}
+			};
+		prodEditor._addItem(itemData, true);
+
+		readonlyFields();
+		_dialogChoiceProduct.Close();
+		return false;
+	});
+
+});

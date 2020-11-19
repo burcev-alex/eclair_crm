@@ -37,7 +37,7 @@ class Deal extends Prototype
 
         return ob_get_clean();
     }
-    
+
     public function createAction()
     {
         $this->view = new View\Json();
@@ -45,7 +45,7 @@ class Deal extends Prototype
         $contact_id = (int)$this->getParam('contact_id');
         $category_id = (int)$this->getParam('category_id');
         $product_id = (int)$this->getParam('product_id');
-        
+
         if(Loader::includeModule('crm') && Loader::includeModule('studiobit.matrix')){
             if($object = Object::getObjectByID($product_id)){
                 if($object->getStatus() == ObjectStatus::Open)
@@ -123,7 +123,36 @@ class Deal extends Prototype
                 'MODE' => 'FORM'
             ],
             $componentResult
-        );		
+        );
+    }
+    public function sendlinkbywaAction()
+    {
+        $PHONE = $this->getParam("PHONE");
+        $LINK = $this->getParam("LINK");
+
+        $this->view = new View\Html();
+        $this->returnAsIs = true;
+
+        $text = 'Ссылка для оплаты Вашего заказа: '.$LINK;
+
+        $res = sendByWhatsApp($PHONE,$text);
+
+        return \Bitrix\Main\Web\Json::encode(['result'=>$res]);
+    }
+
+    public function sendlinkbysmsAction()
+    {
+        $PHONE = $this->getParam("PHONE");
+        $LINK = $this->getParam("LINK");
+
+        $this->view = new View\Html();
+        $this->returnAsIs = true;
+
+        $text = 'Ссылка для оплаты Вашего заказа: '.$LINK;
+
+        $res = sendSMS($PHONE,$text);
+
+        return \Bitrix\Main\Web\Json::encode(['result'=>$res]);
     }
 
     public function paymentScheduleAddAction()
@@ -324,5 +353,18 @@ class Deal extends Prototype
 
         return true;
     }
+
+    public function getDialogAddProductAction()
+    {
+        $this->view = new View\Html();
+        $this->returnAsIs = true;
+
+        return $this->getComponent(
+            "studiobit.project:autocomplete.products",
+            "",
+            []
+        );
+    }
 }
+
 ?>

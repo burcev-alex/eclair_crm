@@ -179,6 +179,7 @@ $tabContainerId = "{$guid}_tabs";
 	?></div><?
 
 ?></div><?
+
 /*
 * CRM_ENT_DETAIL_COPY_LEAD_URL
 * CRM_ENT_DETAIL_COPY_DEAL_URL

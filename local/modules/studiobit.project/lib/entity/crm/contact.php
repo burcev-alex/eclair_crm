@@ -258,46 +258,6 @@ class ContactTable extends Crm\ContactTable
     {
         $list = [];
 
-        $rsContact = self::getList([
-            'filter' => ['ID' => $contactId],
-            'select' => ['ID', 'TYPE_ID', 'STATUS_CODE' => 'ENUM_CRM_STATUS.XML_ID']
-        ]);
-
-        if ($arContact = $rsContact->fetch()) {
-            if ($arContact['TYPE_ID'] !== 'PARTNER') {
-                if(empty($arContact['STATUS_CODE']))
-                    $arContact['STATUS_CODE'] = 'NEW';
-
-                if (in_array($arContact['STATUS_CODE'], ['NEW', 'CALL', 'CALL_BASE', 'OFFLINE', 'HOLD', 'SELL_OTHERS', 'NO_TARGET', 'SECOND', 'BOOKING_ABORT']))
-                    $list[] = 'WORK';
-
-                $list[] = 'OFFLINE';
-
-                if (in_array($arContact['STATUS_CODE'], ['NEW', 'CALL', 'WORK'])) {
-                    $list[] = 'CALL_BASE';
-                    $list[] = 'NO_TARGET';
-                    $list[] = 'SECOND';
-                }
-
-                if (in_array($arContact['STATUS_CODE'],['NEW', 'CALL', 'WORK'])){
-                    //проверяем наличие активных сделок у контакта
-                    $rsDeal = \Studiobit\Matrix\Entity\DealTable::getList([
-                        'filter' => ['IS_WORK' => 1, 'CONTACT_ID' => $contactId],
-                        'select' => ['ID']
-                    ]);
-
-                    if(!$rsDeal->fetch()) {
-                        //если сделок в работе нет, то разрешаем статусы "Отложили покупку" и "Купили в другом месте"
-                        $list[] = 'HOLD';
-                        $list[] = 'SELL_OTHERS';
-                    }
-                }
-            }
-            else{
-                $list = ['REALTOR_READY', 'REALTOR_NOT_WORK', 'REALTOR_NOT_READY', 'REALTOR_WORK'];
-            }
-        }
-
         return $list;
     }
 
@@ -352,10 +312,11 @@ class ContactTable extends Crm\ContactTable
      */
     public static function updateStatus($contactId)
     {
+		/*
         //определяем текущий статус
         $rsContact = self::getList([
             'filter' => ['ID' => $contactId],
-            'select' => ['ID', 'TYPE_ID', 'STATUS_CODE' => 'ENUM_CRM_STATUS.XML_ID', 'UF_CRM_DIALING']
+            'select' => ['ID', 'TYPE_ID', 'UF_CRM_DIALING']
         ]);
 
         if ($arContact = $rsContact->fetch())
@@ -411,12 +372,14 @@ class ContactTable extends Crm\ContactTable
                     self::setStatus($arContact['ID'], $contactStatus);
                 }
             }
-        }
+		}
+		*/
     }
     
     public static function setStatus($contactId, $code){
         $fields = [];
 
+		/*
         $enums = self::getStatusList();
 
         foreach($enums as $enum) {
@@ -428,7 +391,8 @@ class ContactTable extends Crm\ContactTable
         if(!empty($fields)){
             self::update($contactId, $fields);
             self::sendStatusToSite($contactId);
-        }
+		}
+		*/
     }
 
     /**
@@ -437,12 +401,14 @@ class ContactTable extends Crm\ContactTable
      * @throws \Exception
      */
     public static function sendStatusToSite($contactId){
+		/*
         $function = '\\Studiobit\\Project\\Command\\Bingo::sendContactStage(' . $contactId . ');';
         if(!CommandManager::have(['UF_COMMAND' => $function])) {
             $datetime = new \DateTime();
             $datetime->setTimestamp(time() + 30);
             CommandManager::add()->date($datetime)->func($function)->module(Project\MODULE_ID)->save();
-        }
+		}
+		*/
     }
 
     public static function checkActiveDeals($contactId){
@@ -660,7 +626,6 @@ class ContactTable extends Crm\ContactTable
 
         $rs = self::getList([
             'filter' => [
-                'ENUM_CRM_STATUS.XML_ID' => 'NEW',
                 'ASSIGNED_BY_ID'      => Project\MANAGERS
             ],
             'select' => ['ID', 'FULL_NAME', 'DATE_CREATE']
@@ -683,7 +648,6 @@ class ContactTable extends Crm\ContactTable
     public static function isStock($id){
         $rs = self::getList([
             'filter' => [
-                'ENUM_CRM_STATUS.XML_ID' => 'NEW',
                 'ASSIGNED_BY_ID'      => Project\MANAGERS,
                 'ID' => $id
             ],
