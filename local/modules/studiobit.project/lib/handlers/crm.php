@@ -20,9 +20,10 @@ class Crm
 {
     private static $prevDeal;
     private static $prevContact;
-    
+
     public static function onAfterCrmControlPanelBuild(&$items)
     {
+
         //скрываем лишние вкладки из меню раздела crm
         $removeItems = ['START', 'EVENT', 'QUOTE', 'INVOICE', 'FACETRACKER'];
 
@@ -98,7 +99,7 @@ class Crm
             if($source = Project\Entity\Crm\ContactTable::getSourceByName('Входящий поток'))
                 $fields['UF_CRM_SOURCE'] = $source;
         }
-        
+
         $fields['UF_ASSIGNED_DATE'] = \ConvertTimeStamp(false, 'FULL');
 
         if(!Project\Entity\Crm\ContactTable::validateFields($fields)){
@@ -130,9 +131,9 @@ class Crm
         self::$prevContact = Project\Entity\Crm\ContactTable::getList([
             'filter' => ['ID' => $fields['ID']],
             'select' => [
-                'ID',                          
+                'ID',
 	            'ASSIGNED_BY_ID',
-	            'TYPE_ID',              
+	            'TYPE_ID',
             ]
         ])->fetch();
 
@@ -314,7 +315,7 @@ class Crm
     public static function OnAfterCrmDealAdd($fields)
     {
         \p2log($fields, 'deal_add_'.\ConvertTimeStamp());
-        
+
         //обновление статуса контакта
         $rsDeal = Project\Entity\Crm\DealTable::getList([
             'filter' => ['ID' => $fields['ID']],
@@ -378,7 +379,7 @@ class Crm
     public static function RequisiteOnBeforeAdd(Entity\Event $event)
     {
         $result = new Entity\EventResult;
-        
+
         $data = $event->getParameter("fields");
 
         if($data['ENTITY_TYPE_ID'] == \CCrmOwnerType::Company){
