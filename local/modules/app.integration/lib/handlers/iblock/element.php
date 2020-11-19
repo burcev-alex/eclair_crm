@@ -2,196 +2,216 @@
 
 namespace App\Integration\Handlers\Iblock;
 
-use \Bitrix\Main;
 use \App\Base;
 use \App\Integration as Union;
 
-class Element {
-	
-	/**
-	 * До добавления элемента в инфоблок
-	 *
-	 * @param array $arFields
-	 * @return void
-	 */
-	public static function onBeforeIBlockElementAdd(&$arFields){
-		$arFields['XML_ID'] = randString(12);
-		$arFields['EXTERNAL_ID'] = $arFields['XML_ID'];
-	}
-	
-	/**
-	 * После добавления элемента в инфоблок
-	 *
-	 * @param array $arFields
-	 * @return void
-	 */
-	public static function onAfterIBlockElementAdd(&$arFields){
-		\CModule::IncludeModule('catalog');
-		\CModule::IncludeModule('iblock');
+class Element
+{
+    /**
+     * До добавления элемента в инфоблок.
+     *
+     * @param array $arFields
+     * @return void
+     */
+    public static function onBeforeIBlockElementAdd(&$arFields)
+    {
+        $arFields['XML_ID'] = randString(12);
+        $arFields['EXTERNAL_ID'] = $arFields['XML_ID'];
+    }
 
-		$data = Base\Tools::getElementByIDWithProps($arFields['ID']);
+    /**
+     * После добавления элемента в инфоблок.
+     *
+     * @param array $arFields
+     * @return void
+     */
+    public static function onAfterIBlockElementAdd(&$arFields)
+    {
+        \CModule::IncludeModule('catalog');
+        \CModule::IncludeModule('iblock');
 
-		$externalSectionId = false;
-		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $arFields["IBLOCK_ID"], 'ID' => $arFields["IBLOCK_SECTION_ID"]));
-		if($arSection = $dbSection->Fetch()){
-			$data['IBLOCK_SECTION_DATA'] = $arSection;
-			$externalSectionId = $arSection['XML_ID'] ? $arSection['XML_ID'] : $arSection['CODE'];
+        $data = Base\Tools::getElementByIDWithProps($arFields['ID']);
+
+        $externalSectionId = false;
+        if (IntVal($arFields['IBLOCK_SECTION_ID']) > 0) {
+            $dbSection = \CIBlockSection::GetList([], ['IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => $arFields['IBLOCK_SECTION_ID']]);
+            if ($arSection = $dbSection->Fetch()) {
+                $data['IBLOCK_SECTION_DATA'] = $arSection;
+                $externalSectionId = $arSection['XML_ID'] ? $arSection['XML_ID'] : $arSection['CODE'];
+            } else {
+                $data['IBLOCK_SECTION_DATA'] = [];
+            }
+        } else {
+            $data['IBLOCK_SECTION_DATA'] = [];
 		}
-		else{
+		
+		if (array_key_exists('IBLOCK_SECTION', $arFields)) {
+            $dbSectionList = \CIBlockSection::GetList([], ['IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => $arFields['IBLOCK_SECTION']]);
 			$data['IBLOCK_SECTION_DATA'] = [];
-		}
+			while ($arSectionList = $dbSectionList->Fetch()) {
+                $data['IBLOCK_SECTION_DATA'] = $arSectionList;
+                $externalSectionId = $arSectionList['XML_ID'] ? $arSectionList['XML_ID'] : $arSectionList['CODE'];
+            }
+        } else {
+            $data['IBLOCK_SECTION_DATA'] = [];
+        }
 
-		$data['IBLOCK_SECTION_ID'] = $externalSectionId;
-		
+        $data['IBLOCK_SECTION_ID'] = $externalSectionId;
 
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
-		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+        $arIblock = \CIBlock::GetByID($arFields['IBLOCK_ID'])->Fetch();
+        $data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
 
-		if(IntVal($data['PREVIEW_PICTURE']) > 0){
-			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PREVIEW_PICTURE']);
-		}
+        if (IntVal($data['PREVIEW_PICTURE']) > 0) {
+            $data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PREVIEW_PICTURE']);
+        }
 
-		if(IntVal($data['DETAIL_PICTURE']) > 0){
-			$data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['DETAIL_PICTURE']);
-		}
+        if (IntVal($data['DETAIL_PICTURE']) > 0) {
+            $data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['DETAIL_PICTURE']);
+        }
 
-		foreach ($data['PROPERTIES'] as $propertyCode => $propValues) {
-			if(!array_key_exists("PROPERTY_TYPE", $propValues)){
-				foreach($propValues as $key=>$firstValue){
-					if ($firstValue['PROPERTY_TYPE'] == 'E') {
+        foreach ($data['PROPERTIES'] as $propertyCode => $propValues) {
+            if (! array_key_exists('PROPERTY_TYPE', $propValues)) {
+                foreach ($propValues as $key => $firstValue) {
+                    if ($firstValue['PROPERTY_TYPE'] == 'E') {
+                        $value = $firstValue['VALUE'];
+                        $rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => IntVal($firstValue['VALUE'])], false, false, ['ID', 'XML_ID']);
+                        if ($arBindElement = $rsBindElement->Fetch()) {
+                            $value = $arBindElement['XML_ID'] ? $arBindElement['XML_ID'] : $arBindElement['ID'];
+                        }
+                        $data['PROPERTIES'][$propertyCode][$key]['VALUE'] = $value;
+                    }
+                }
+            } else {
+                if ($propValues['PROPERTY_TYPE'] == 'E') {
+                    $data['PROPERTIES'][$propertyCode]['VALUE'] = $propValues['VALUE'];
+                    $rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => IntVal($propValues['VALUE'])], false, false, ['ID', 'XML_ID']);
+                    while ($arBindElement = $rsBindElement->Fetch()) {
+                        $data['PROPERTIES'][$propertyCode]['VALUE'] = $arBindElement['XML_ID'] ? $arBindElement['XML_ID'] : $arBindElement['ID'];
+                    }
+                }
+            }
+        }
 
-						$value = $firstValue['VALUE'];
-						$rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => IntVal($firstValue['VALUE'])], false, false, ['ID', 'XML_ID']);
-						if ($arBindElement = $rsBindElement->Fetch()) {
-							$value = $arBindElement['XML_ID'] ? $arBindElement['XML_ID'] : $arBindElement['ID'];
-						}
-						$data['PROPERTIES'][$propertyCode][$key]['VALUE'] = $value;
+        $rsPrice = \CPrice::GetList(
+            [
+                'ID' => 'DESC'
+            ],
+            [
+                'PRODUCT_ID' => $arFields['ID'],
+                'CATALOG_GROUP_ID' => 1
+            ]
+        );
 
-					}
-				}
-			}
-			else{
-				if ($propValues['PROPERTY_TYPE'] == 'E') {
-					$data['PROPERTIES'][$propertyCode]['VALUE'] = $propValues['VALUE'];
-					$rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => IntVal($propValues['VALUE'])], false, false, ['ID', 'XML_ID']);
-					while ($arBindElement = $rsBindElement->Fetch()) {
-						$data['PROPERTIES'][$propertyCode]['VALUE'] = $arBindElement['XML_ID'] ? $arBindElement['XML_ID'] : $arBindElement['ID'];
-					}
-				}
-			}
-		}
+        if ($arrPrice = $rsPrice->Fetch()) {
+            $data['PRICE'] = $arrPrice;
+        }
 
-		$rsPrice = \CPrice::GetList(
-			array(
-				'ID' => 'DESC'
-			),
-			array(
-					"PRODUCT_ID" => $arFields['ID'],
-					"CATALOG_GROUP_ID" => 1
-				)
-		);
+        $endpoint = new Union\Rest\Client\Web();
+        $response = $endpoint->product('add', $data);
+    }
 
-		if ($arrPrice = $rsPrice->Fetch())
-		{
-			$data['PRICE'] = $arrPrice;
-		}
+    /**
+     * После изменения элемента в инфоблоке.
+     *
+     * @param array $arFields
+     * @return void
+     */
+    public static function onAfterIBlockElementUpdate(&$arFields)
+    {
+        \CModule::IncludeModule('catalog');
 
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("add", $data);
-	}
+        $data = Base\Tools::getElementByIDWithProps($arFields['ID']);
 
-	/**
-	 * После изменения элемента в инфоблоке
-	 *
-	 * @param array $arFields
-	 * @return void
-	 */
-	public static function onAfterIBlockElementUpdate(&$arFields){
-		\CModule::IncludeModule('catalog');
+        $arIblock = \CIBlock::GetByID($arFields['IBLOCK_ID'])->Fetch();
+        $data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
 
-		$data = Base\Tools::getElementByIDWithProps($arFields['ID']);
+        $externalSectionId = false;
+        if (IntVal($arFields['IBLOCK_SECTION_ID']) > 0) {
+            $dbSection = \CIBlockSection::GetList([], ['IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => IntVal($arFields['IBLOCK_SECTION_ID'])]);
+            if ($arSection = $dbSection->Fetch()) {
+                $data['IBLOCK_SECTION_DATA'] = $arSection;
+                $externalSectionId = $arSection['XML_ID'] ? $arSection['XML_ID'] : $arSection['CODE'];
+            } else {
+                $data['IBLOCK_SECTION_DATA'] = [];
+            }
+        } else {
+            $data['IBLOCK_SECTION_DATA'] = [];
+        }
 
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
-		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
-
-		$externalSectionId = false;
-		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $arFields["IBLOCK_ID"], 'ID' => $arFields["IBLOCK_SECTION_ID"]));
-		if($arSection = $dbSection->Fetch()){
-			$data['IBLOCK_SECTION_DATA'] = $arSection;
-			$externalSectionId = $arSection['XML_ID'] ? $arSection['XML_ID'] : $arSection['CODE'];
-		}
-		else{
+        if (array_key_exists('IBLOCK_SECTION', $arFields)) {
+            $dbSection = \CIBlockSection::GetList([], ['IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => $arFields['IBLOCK_SECTION']]);
 			$data['IBLOCK_SECTION_DATA'] = [];
-		}
+			while ($arSection = $dbSection->Fetch()) {
+                $data['IBLOCK_SECTION_DATA'] = $arSection;
+                $externalSectionId = $arSection['XML_ID'] ? $arSection['XML_ID'] : $arSection['CODE'];
+            }
+        } else {
+            $data['IBLOCK_SECTION_DATA'] = [];
+        }
 
-		$data['IBLOCK_SECTION_ID'] = $externalSectionId;
+        $data['IBLOCK_SECTION_ID'] = $externalSectionId;
 
-		if(IntVal($data['PREVIEW_PICTURE']) > 0){
-			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);
-		}
+        if (IntVal($data['PREVIEW_PICTURE']) > 0) {
+            $data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);
+        }
 
-		if(IntVal($data['DETAIL_PICTURE']) > 0){
-			$data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['DETAIL_PICTURE']);
-		}
+        if (IntVal($data['DETAIL_PICTURE']) > 0) {
+            $data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['DETAIL_PICTURE']);
+        }
 
-		foreach ($data['PROPERTIES'] as $propertyCode => $propValues) {
-			if(!array_key_exists("PROPERTY_TYPE", $propValues)){
-				foreach($propValues as $key=>$firstValue){
-					if ($firstValue['PROPERTY_TYPE'] == 'E') {
+        foreach ($data['PROPERTIES'] as $propertyCode => $propValues) {
+            if (! array_key_exists('PROPERTY_TYPE', $propValues)) {
+                foreach ($propValues as $key => $firstValue) {
+                    if ($firstValue['PROPERTY_TYPE'] == 'E') {
+                        $value = $firstValue['VALUE'];
+                        $rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => IntVal($firstValue['VALUE'])], false, false, ['ID', 'XML_ID']);
+                        if ($arBindElement = $rsBindElement->Fetch()) {
+                            $value = $arBindElement['XML_ID'] ? $arBindElement['XML_ID'] : $arBindElement['ID'];
+                        }
+                        $data['PROPERTIES'][$propertyCode][$key]['VALUE'] = $value;
+                    }
+                }
+            } else {
+                if ($propValues['PROPERTY_TYPE'] == 'E') {
+                    $data['PROPERTIES'][$propertyCode]['VALUE'] = $propValues['VALUE'];
+                    $rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => IntVal($propValues['VALUE'])], false, false, ['ID', 'XML_ID']);
+                    while ($arBindElement = $rsBindElement->Fetch()) {
+                        $data['PROPERTIES'][$propertyCode]['VALUE'] = $arBindElement['XML_ID'] ? $arBindElement['XML_ID'] : $arBindElement['ID'];
+                    }
+                }
+            }
+        }
 
-						$value = $firstValue['VALUE'];
-						$rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => IntVal($firstValue['VALUE'])], false, false, ['ID', 'XML_ID']);
-						if ($arBindElement = $rsBindElement->Fetch()) {
-							$value = $arBindElement['XML_ID'] ? $arBindElement['XML_ID'] : $arBindElement['ID'];
-						}
-						$data['PROPERTIES'][$propertyCode][$key]['VALUE'] = $value;
+        $rsPrice = \CPrice::GetList(
+            [
+                'ID' => 'DESC'
+            ],
+            [
+                'PRODUCT_ID' => $arFields['ID'],
+                'CATALOG_GROUP_ID' => 1
+            ]
+        );
 
-					}
-				}
-			}
-			else{
-				if ($propValues['PROPERTY_TYPE'] == 'E') {
-					$data['PROPERTIES'][$propertyCode]['VALUE'] = $propValues['VALUE'];
-					$rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => IntVal($propValues['VALUE'])], false, false, ['ID', 'XML_ID']);
-					while ($arBindElement = $rsBindElement->Fetch()) {
-						$data['PROPERTIES'][$propertyCode]['VALUE'] = $arBindElement['XML_ID'] ? $arBindElement['XML_ID'] : $arBindElement['ID'];
-					}
-				}
-			}
-		}
+        if ($arrPrice = $rsPrice->Fetch()) {
+            $data['PRICE'] = $arrPrice;
+        }
 
-		$rsPrice = \CPrice::GetList(
-			array(
-				'ID' => 'DESC'
-			),
-			array(
-					"PRODUCT_ID" => $arFields['ID'],
-					"CATALOG_GROUP_ID" => 1
-				)
-		);
+        $endpoint = new Union\Rest\Client\Web();
+        $response = $endpoint->product('update', $data);
+    }
 
-		if ($arrPrice = $rsPrice->Fetch())
-		{
-			$data['PRICE'] = $arrPrice;
-		}
-		
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("update", $data);
-	}
-	
-	/**
-	 * После удаления элемента в инфоблоке
-	 *
-	 * @param array $arFields
-	 * @return void
-	 */
-	public static function onAfterIBlockElementDelete(&$arFields){
-		
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
-		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+    /**
+     * После удаления элемента в инфоблоке.
+     *
+     * @param array $arFields
+     * @return void
+     */
+    public static function onAfterIBlockElementDelete(&$arFields)
+    {
+        $arIblock = \CIBlock::GetByID($arFields['IBLOCK_ID'])->Fetch();
+        $arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
 
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("delete", $arFields);
-	}
+        $endpoint = new Union\Rest\Client\Web();
+        $response = $endpoint->product('delete', $arFields);
+    }
 }
-?>
