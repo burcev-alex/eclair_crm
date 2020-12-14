@@ -91,7 +91,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
         \CModule::IncludeModule('crm');
         \CModule::IncludeModule('iblock');
         global $APPLICATION;
-
+        p2log($fields,'order');
         if ($this->contactId > 0) {
             $dealEntity = new Crm\DealTable();
             $objDeal = new \CCrmDeal(false);
@@ -110,7 +110,18 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                 // определить стадию сделки
                 $stageId = 'NEW';
 
+                $paymentType = [
+                    '1' =>'Наличные курьеру',
+                    '3' =>'Оплата картой онлайн',
+                    '8' => 'Перевод по номеру карты',
+                    '7' =>'Картой при получении заказа'
+                ];
+                $paymentTypeText = '';
+                if(!empty($fields['paymentId']) && isset($paymentType[$fields['paymentId']])){
+                    $paymentTypeText = $paymentType[$fields['paymentId']];
+                }
                 $property = [];
+                $property['Улица'] = '';
                 foreach ($fields['property']['properties'] as $kProp => $valProp) {
                     if ($valProp['TYPE'] == 'LOCATION') {
                         $property[$valProp['NAME']] = implode(' / ', $valProp['VALUE']);
@@ -121,7 +132,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     } else {
                         $property[$valProp['NAME']] = implode(' / ', $valProp['VALUE']);
                     }
-                }
+				}
 
                 $fieldOrder = [
                     'SOURCE_ID' => $this->getSourceId(),
@@ -131,7 +142,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     'CREATED_BY_ID' => $this->responsibleId,
                     'STAGE_ID' => $stageId,
                     'STAGE_SEMANTIC_ID' => $stageId,
-                    'BEGINDATE' => date('d.m.Y H:i:s'),
+                    'BEGINDATE' => $fields['dateInsert'],
                     'OPPORTUNITY' => $fields['price'],
                     'CURRENCY_ID' => 'RUB',
                     'COMMENTS' => $fields['comments'],
@@ -146,20 +157,38 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                         ],
                     ],
                     'OPENED' => 'Y',
+                    'UF_NOTIFY' => 0,
                     'CLOSED' => 'N',
                     'ORIGIN_ID' => $fields['id'],
                     'OPPORTUNITY_ACCOUNT' => $fields['price'],
                     'UF_COMMUNICATION' => $property['Удобный сбособ связи'],
+                    'UF_DELIVERY_DATE' => $property['Желаемая дата и время доставки'],
+                    'UF_QUANTITY_TABLEWARE' => $property['Количество приборов'],
                     'UF_DELIVERY_AREA' => $property['Район'],
-                    'UF_DELIVERY_DATE' => date("d.m.Y H:i:s", strtotime($property['Желаемая дата и время доставки'])),
                     'UF_DELIVERY_STREET' => $property['Улица'],
                     'UF_DELIVERY_ENTRANCE' => $property['Подъезд'],
                     'UF_DELIVERY_FLOOR' => $property['Этаж'],
+                    'UF_DELIVERY_HOUSE' => $property['Номер дома'],
                     'UF_DELIVERY_APARTMENT' => $property['Квартира'],
                     'UF_DELIVERY' => 2, // Доставка, самовывоза нет
                     'UF_DELIVERY_SUM' => $fields['priceDelivery'],
                     'UF_DELIVERY_COMMENT' => $fields['delivery'], // Способ доставки
+                    'UF_PAYMENT_TYPE' => $paymentTypeText, // Способ оплаты
                 ];
+
+                if(isset(  $fields['siteid'])  ){
+                    $source = '26';
+                    if($fields['siteid'] == 's2'){
+                        $source = '27';
+                    }
+                    $fieldOrder['UF_SOURCE'] = $source;
+                }
+                if(isset($property['Улица']) && strlen($property['Улица']) > 0){
+                    $fieldOrder['TITLE'] = $property['Улица'].', '. $property['Номер дома'];
+                }
+                else {
+                    $fieldOrder['TITLE'] = $fields['delivery'];
+                }
 
                 // снять проверку обязательных полей
                 $fieldOrder['APP_EVENT_HANDLERS_DISABLED'] = true;
@@ -178,31 +207,33 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     foreach ($productList as $sort => $itemProduct) {
                         $tmp = explode('#', $itemProduct['name']);
                         $itemProduct['name'] = $tmp[0];
-                        $stringProductList .= $itemProduct['name'].' ('.intval($itemProduct['count']).' шт.)'."\r\n";
+                        $stringProductList .= $itemProduct['name']." (".intval($itemProduct['count'])." шт.)"."\r\n";
                     }
                     $fieldOrder = [
                         'UF_GOODS_TEXT' => $stringProductList
                     ];
                     $objDeal->Update($this->dealId, $fieldOrder);
-                } else {
-                    $fieldOrder = [
-                        'UF_PAYMENT' => array_key_exists('payed', $fields) ? $fields['payed'] : 0
-                    ];
 
-                    $objDeal->Update($this->dealId, $fieldOrder);
-                }
+				}
+				else{
+					$fieldOrder = [
+						'UF_PAYMENT' => array_key_exists('payed', $fields) ? $fields['payed'] : 0
+					];
 
-                // обновление воронки
-                \CCrmDeal::RebuildStatistics(
-                    [$this->dealId],
-                    [
-                        'FORCED' => true,
-                        'ENABLE_SUM_STATISTICS' => true,
-                        'ENABLE_HISTORY' => true,
-                        'ENABLE_INVOICE_STATISTICS' => true,
-                        'ENABLE_ACTIVITY_STATISTICS' => true,
-                    ]
-                );
+					$objDeal->Update($this->dealId, $fieldOrder);
+				}
+
+				// обновление воронки
+				\CCrmDeal::RebuildStatistics(
+					[$this->dealId],
+					[
+						'FORCED' => true,
+						'ENABLE_SUM_STATISTICS' => true,
+						'ENABLE_HISTORY' => true,
+						'ENABLE_INVOICE_STATISTICS' => true,
+						'ENABLE_ACTIVITY_STATISTICS' => true,
+					]
+				);
 
                 $this->responce['dealId'] = $this->dealId;
             } catch (\Exception $e) {
@@ -229,7 +260,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
 
         // собираем продукты
         $productList = $this->prepareItems($fields['basket']);
-
+        p2log($productList,'order_elements_prepared');
         foreach ($productList as $sort => $itemProduct) {
             $productItems = [
                 'OWNER_TYPE' => 'D',
@@ -251,7 +282,9 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                 'SORT' => $sort + 10,
             ];
 
-            $productId = $obProduct->Add($productItems);
+            if(!$productId = $obProduct->Add($productItems)) {
+                p2log($obProduct,'order_error_elements_add');
+            }
         }
 
         return $productList;
@@ -309,7 +342,8 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     $productId = $arElement['ID'];
                 }
             }
-
+            $adding = $this->checkPropertyForAdding($product);
+            $productName .= $adding;
             $productList[] = [
                 'name' => $productName,
                 'price' => $product['price'],
@@ -320,6 +354,17 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
         }
 
         return $productList;
+    }
+
+    private function checkPropertyForAdding($product){
+        $adding = '';
+        $pattern = '/^(ADDING).+/i';
+        foreach($product['property'] as $key=>$prop){
+            if (preg_match($pattern,$key)){
+                $adding = ' '.$prop;
+            }
+        }
+        return $adding;
     }
 
     /**
