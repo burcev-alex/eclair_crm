@@ -4,8 +4,8 @@ $(function() {
 
     if(!$.Studiobit.Project)
         $.Studiobit.Project = {};
-	
-	
+
+
 	$.Studiobit.Project.Timeline = function(params)
     {
 		//параметры по умолчанию
@@ -16,7 +16,7 @@ $(function() {
 
         this.init();
 	}
-	
+
 	$.Studiobit.Project.Timeline.prototype = {
 		init: function(content){
             if(BX.CrmTimelineManager) {
@@ -176,7 +176,7 @@ $(function() {
                     });
 
                     checkRemind();
-                    
+
                     $('.ui-btn', additionals).on('click', function(){
                         var bSend = true;
                         var btn = $(this);
@@ -246,7 +246,7 @@ $(function() {
                     $.each(instance._schedule.getItems(), function(id, item){
                         item.refreshLayout();
                     });
-                    
+
                     if($.Studiobit.Project.Define.BusinessCardText !== '') {
                         var itemContainer = $('<a data-item-id="sms" data-item-title="Визитка" class="crm-entity-stream-section-new-action" href="#">Визитка</a>');
                         var smsContainer = $(instance._menuBar._container).find('a[data-item-id="sms"]');
@@ -279,5 +279,5 @@ $(function() {
 	};
 
     $.Studiobit.Project.timeline = new $.Studiobit.Project.Timeline();
-	
+
 });
