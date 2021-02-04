@@ -515,6 +515,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
         $rs = $sql->setSelect(['ID'])->exec();
         while ($ar = $rs->fetch()) {
             $id = $ar['ID'];
+            break;
         }
 
         return $id;
@@ -541,6 +542,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     continue;
                 }
                 $id = $ar['ID'];
+                break;
             }
         } catch (SystemException $e) {
             $id = 0;
@@ -572,6 +574,7 @@ class IncomingOrder extends Union\Queue\AbstractBase implements Union\Queue\Host
                     continue;
                 }
                 $id = $ar['ID'];
+                break;
             }
         } catch (SystemException $e) {
             $id = 0;
