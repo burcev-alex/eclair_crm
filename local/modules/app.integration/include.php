@@ -22,6 +22,7 @@ $arClassBase = array(
 
 	'\App\Integration\Event' => 'lib/event.php',
 	'\App\Integration\Tools' => 'lib/tools.php',
+	'\App\Integration\Constructor' => 'lib/constructor.php',
 
 	'\App\Integration\Entity\Crm\ActivityTable' => 'lib/entity/crm/activity.php',
     '\App\Integration\Entity\Crm\ContactTable' => 'lib/entity/crm/contact.php',

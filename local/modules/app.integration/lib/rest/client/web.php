@@ -26,13 +26,13 @@ class Web extends Rest\Client\AbstractBase
 
 	protected $format = "json";
 
-	public function __construct($userId = 1)
+	public function __construct($host, $url, $token, $format='json', $userId = 1)
 	{
 		// settings
-		$this->url = Main\Config\Option::get('app.integration', 'site_url', '');
-		$this->host = Main\Config\Option::get('app.integration', 'site_host', '');
-		$this->token = Main\Config\Option::get('app.integration', 'site_token', '');
-		$this->format = Main\Config\Option::get('app.integration', 'site_format', 'json');
+		$this->url = $url;
+		$this->host = $host;
+		$this->token = $token;
+		$this->format = $format;
 		$this->userId = $userId;
 
 		$option = array(

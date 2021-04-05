@@ -10,15 +10,25 @@ IncludeModuleLangFile(__FILE__);
 CModule::IncludeModule($module_id);
 CJSCore::Init(array("jquery"));
 
+$arrSites = [
+	's1' => 'ECLAIR.DELIVERY',
+	's2' => 'СЧАСТЬЕПЕЧЬ.РФ',
+	's3' => 'SWEET-ECLAIR.RU' 
+];
+
 $arAllOptions =
 	array(
 		array("debug", "debug", "N", array("text", 10)),
-		array("server_rest_api", "server_rest_api", "", array("text", 10)),
-		array("site_url", "site_url", "", array("text", 10)),
-		array("site_host", "site_host", "", array("text", 10)),
-		array("site_token", "site_token", "", array("text", 10)),
-		array("site_format", "site_format", "", array("text", 10)),
+		array("server_rest_api", "server_rest_api", "", array("text", 10))
 	);
+
+foreach($arrSites as $siteCode=>$domain){
+	$arAllOptions[] = array("site_url_".$siteCode, "site_url_".$siteCode, "", array("text", 10));
+	$arAllOptions[] = array("site_host_".$siteCode, "site_host_".$siteCode, "", array("text", 10));
+	$arAllOptions[] = array("site_token_".$siteCode, "site_token_".$siteCode, "", array("text", 10));
+	$arAllOptions[] = array("site_format_".$siteCode, "site_format_".$siteCode, "", array("text", 10));
+	$arAllOptions[] = array("iblock_external_id_".$siteCode, "iblock_external_id_".$siteCode, "", array("text", 10));
+}
 
 $aTabs = array(
 	array("DIV" => "edit1", "TAB" => GetMessage("APP_INTEGRATION_TAB_OTHER"), "ICON" => "capp_settings", "TITLE" => GetMessage("APP_INTEGRATION_TAB_OTHER")),
@@ -82,6 +92,7 @@ $tabControl->BeginNextTab();
     <tr>
         <td valign="top" width="20%">
             Режим отладки:
+		</td>
         <td valign="top" width="80%">
             <input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "debug");?>" name="debug">
         </td>
@@ -89,41 +100,62 @@ $tabControl->BeginNextTab();
     <tr>
         <td valign="top" width="20%">
             Веб-сервер (TOKEN):
+		</td>
         <td valign="top" width="80%">
             <input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "server_rest_api");?>" name="server_rest_api">
         </td>
     </tr>
 	<?
 	$tabControl->BeginNextTab();
+
+	foreach($arrSites as $siteCode=>$domain){
 	?>
+	<tr class="heading">
+		<td valign="top" colspan="2">
+			<?=$domain;?>
+		</td>
+	</tr>
 	<tr>
 		<td valign="top" width="20%">
 			Веб-сервис (URL):
+		</td>
 		<td valign="top" width="80%">
-			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "site_url");?>" name="site_url">
+			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "site_url_".$siteCode);?>" name="site_url_<?=$siteCode;?>">
 		</td>
 	</tr>
 	<tr>
 		<td valign="top" width="20%">
 			Веб-сервис (HOST):
+		</td>
 		<td valign="top" width="80%">
-			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "site_host");?>" name="site_host">
+			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "site_host_".$siteCode);?>" name="site_host_<?=$siteCode;?>">
 		</td>
 	</tr>
 	<tr>
 		<td valign="top" width="20%">
 			Веб-сервис (TOKEN):
+		</td>
 		<td valign="top" width="80%">
-			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "site_token");?>" name="site_token">
+			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "site_token_".$siteCode);?>" name="site_token_<?=$siteCode;?>">
 		</td>
 	</tr>
 	<tr>
 		<td valign="top" width="20%">
 			Веб-сервис (FORMAT):
+		</td>
 		<td valign="top" width="80%">
-			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "site_format");?>" name="site_format">
+			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "site_format_".$siteCode);?>" name="site_format_<?=$siteCode;?>">
 		</td>
 	</tr>
+	<tr>
+		<td valign="top" width="20%">
+			ID инфоблоков (CatalogId|SkuId):
+		</td>
+		<td valign="top" width="80%">
+			<input type="text" size="60" value="<?=COption::GetOptionString("app.integration", "iblock_external_id_".$siteCode);?>" name="iblock_external_id_<?=$siteCode;?>">
+		</td>
+	</tr>
+	<?}?>
 	<?$tabControl->BeginNextTab();?>
         <?require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/admin/group_rights.php");?>
     <?$tabControl->Buttons();?>
