@@ -74,7 +74,7 @@ class Web extends Rest\Client\AbstractBase
 		];
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
-		p2f(json_encode($data, JSON_UNESCAPED_UNICODE));
+		p2f(json_encode($data, JSON_PRETTY_PRINT));
 
 		try {
 			$result = $this->api->post($this->url . $method, $requestString);
@@ -117,7 +117,7 @@ class Web extends Rest\Client\AbstractBase
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
 		
-		p2f(json_encode($data, JSON_UNESCAPED_UNICODE));
+		p2f(json_encode($data, JSON_PRETTY_PRINT));
 
 		try {
 			$result = $this->api->post($this->url . $method, $requestString);
@@ -159,7 +159,7 @@ class Web extends Rest\Client\AbstractBase
 		];
 
 		$requestString = json_encode($data); // JSON_UNESCAPED_UNICODE
-		p2f(json_encode($data, JSON_UNESCAPED_UNICODE));
+		p2f(json_encode($data, JSON_PRETTY_PRINT));
 
 		try {
 			$result = $this->api->post($this->url . $method, $requestString);

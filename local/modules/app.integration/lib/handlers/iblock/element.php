@@ -17,6 +17,7 @@ class Element
     {
         $arFields['XML_ID'] = randString(12);
         $arFields['EXTERNAL_ID'] = $arFields['XML_ID'];
+
     }
 
     /**
@@ -46,11 +47,11 @@ class Element
 		}
 		
 		if (array_key_exists('IBLOCK_SECTION', $arFields)) {
-            $dbSectionList = \CIBlockSection::GetList([], ['IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => $arFields['IBLOCK_SECTION']]);
+            $dbSection = \CIBlockSection::GetList([], ['IBLOCK_ID' => $arFields['IBLOCK_ID'], 'ID' => $arFields['IBLOCK_SECTION']]);
 			$data['IBLOCK_SECTION_DATA'] = [];
-			while ($arSectionList = $dbSectionList->Fetch()) {
-                $data['IBLOCK_SECTION_DATA'] = $arSectionList;
-                $externalSectionId = $arSectionList['XML_ID'] ? $arSectionList['XML_ID'] : $arSectionList['CODE'];
+			while ($arSection = $dbSection->Fetch()) {
+                $data['IBLOCK_SECTION_DATA'] = $arSection;
+                $externalSectionId = $arSection['XML_ID'] ? $arSection['XML_ID'] : $arSection['CODE'];
             }
         } else {
             $data['IBLOCK_SECTION_DATA'] = [];
