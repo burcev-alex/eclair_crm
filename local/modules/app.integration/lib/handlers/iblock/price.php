@@ -18,9 +18,18 @@ class Price {
 		\CModule::IncludeModule('iblock');
 
 		$data = Base\Tools::getElementByIDWithProps($arFields['PRODUCT_ID']);
+		$parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES']['CML2_LINK']['VALUE']);
 
-		$arIblock = \CIBlock::GetByID($data["IBLOCK_ID"])->Fetch();
-		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+		// найти корневой раздел
+		$arrSectionParent = Union\Tools::getParentSection($parent['IBLOCK_SECTION_ID']);
+		$nullSectionId = array_shift($arrSectionParent);
+
+		// конфигурация обмена
+		$entityConfigSync = new Union\Constructor($nullSectionId);
+		$configSync = $entityConfigSync->get();
+
+		// вытягиваем ID внешнего инфоблока из конфигурации зависимости
+		$data['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data["IBLOCK_ID"]);
 
 		if(IntVal($data['PREVIEW_PICTURE']) > 0){
 			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);
@@ -71,8 +80,10 @@ class Price {
 			$data['PRICE'] = $arrPrice;
 		}
 
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("add", $data);
+		if(IntVal($data['IBLOCK_EXTERNAL_ID']) > 0){
+			$endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
+			$response = $endpoint->product("add", $data);
+		}
 	}
 
 	/**
@@ -86,9 +97,19 @@ class Price {
 		\CModule::IncludeModule('catalog');
 
 		$data = Base\Tools::getElementByIDWithProps($arFields['PRODUCT_ID']);
+		$parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES']['CML2_LINK']['VALUE']);
 
-		$arIblock = \CIBlock::GetByID($data["IBLOCK_ID"])->Fetch();
-		$data['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+		// найти корневой раздел
+		$arrSectionParent = Union\Tools::getParentSection($parent['IBLOCK_SECTION_ID']);
+		$nullSectionId = array_shift($arrSectionParent);
+
+		// конфигурация обмена
+		$entityConfigSync = new Union\Constructor($nullSectionId);
+		$configSync = $entityConfigSync->get();
+
+		// вытягиваем ID внешнего инфоблока из конфигурации зависимости
+		$data['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data["IBLOCK_ID"]);
+
 
 		if(IntVal($data['PREVIEW_PICTURE']) > 0){
 			$data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);
@@ -139,8 +160,10 @@ class Price {
 			$data['PRICE'] = $arrPrice;
 		}
 		
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->product("update", $data);
+		if(IntVal($data['IBLOCK_EXTERNAL_ID']) > 0){
+			$endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
+			$response = $endpoint->product("update", $data);
+		}
 	}
 	
 	/**

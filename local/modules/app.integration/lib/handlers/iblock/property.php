@@ -16,11 +16,18 @@ class Property {
 	 */
 	public static function onAfterIBlockPropertyAdd(&$arFields){
 
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
-		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+		// конфигурация обмена
+		$entityConfigSync = new Union\Constructor(0, $arFields["IBLOCK_ID"]);
+		$configSync = $entityConfigSync->get();
 
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->property("add", $arFields);
+		// вытягиваем ID внешнего инфоблока из конфигурации зависимости
+		$arFields['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data["IBLOCK_ID"]);
+
+
+		if(IntVal($arFields['IBLOCK_EXTERNAL_ID']) > 0){
+			$endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
+			$response = $endpoint->property("add", $arFields);
+		}
 	}
 	
 	/**
@@ -31,11 +38,18 @@ class Property {
 	 */
 	public static function onAfterIBlockPropertyUpdate(&$arFields){
 
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
-		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+		// конфигурация обмена
+		$entityConfigSync = new Union\Constructor(0, $arFields["IBLOCK_ID"]);
+		$configSync = $entityConfigSync->get();
 
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->property("update", $arFields);
+		// вытягиваем ID внешнего инфоблока из конфигурации зависимости
+		$arFields['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data["IBLOCK_ID"]);
+
+
+		if(IntVal($arFields['IBLOCK_EXTERNAL_ID']) > 0){
+			$endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
+			$response = $endpoint->property("update", $arFields);
+		}
 	}
 	
 	/**
@@ -46,11 +60,18 @@ class Property {
 	 */
 	public static function onAfterIBlockPropertyDelete(&$arFields){
 
-		$arIblock = \CIBlock::GetByID($arFields["IBLOCK_ID"])->Fetch();
-		$arFields['IBLOCK_EXTERNAL_ID'] = $arIblock['XML_ID'];
+		// конфигурация обмена
+		$entityConfigSync = new Union\Constructor(0, $arFields["IBLOCK_ID"]);
+		$configSync = $entityConfigSync->get();
+
+		// вытягиваем ID внешнего инфоблока из конфигурации зависимости
+		$arFields['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data["IBLOCK_ID"]);
+
 		
-		$endpoint = new Union\Rest\Client\Web();
-		$response = $endpoint->property("delete", $arFields);
+		if(IntVal($arFields['IBLOCK_EXTERNAL_ID']) > 0){
+			$endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
+			$response = $endpoint->property("delete", $arFields);
+		}
 	}
 }
 ?>
