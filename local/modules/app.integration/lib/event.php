@@ -34,6 +34,7 @@ class Event
 
 		// sections of iblock
 		$eventManager->addEventHandler('iblock', 'OnBeforeIBlockSectionAdd', ['\App\Integration\Handlers\Iblock\Section', 'onBeforeIBlockSectionAdd']);
+		$eventManager->addEventHandler('iblock', 'OnBeforeIBlockSectionUpdate', ['\App\Integration\Handlers\Iblock\Section', 'onBeforeIBlockSectionUpdate']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionAdd', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionAdd']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionUpdate', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionUpdate']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockSectionDelete', ['\App\Integration\Handlers\Iblock\Section', 'onAfterIBlockSectionDelete']);

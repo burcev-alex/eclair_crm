@@ -19,6 +19,20 @@ class Section {
 	}
 
 	/**
+	 * Редактирование раздела в инфоблок
+	 *
+	 * @param array $arFields
+	 * @return void
+	 */
+	public static function onBeforeIBlockSectionUpdate(&$arFields){
+        $arSection = \CIBlockSection::GetByID($arFields["ID"])->Fetch();
+        if(strlen($arSection['XML_ID']) == 0){
+		    $arFields['XML_ID'] = randString(12);
+		    $arFields['EXTERNAL_ID'] = $arFields['XML_ID'];
+        }
+	}
+
+	/**
 	 * После добавления раздела в инфоблок
 	 *
 	 * @param array $arFields
@@ -26,34 +40,40 @@ class Section {
 	 */
 	public static function onAfterIBlockSectionAdd(&$arFields){
 
-		$arFields['PARENT'] = Union\Tools::getParentSection($arFields['ID']);
+        $data = $arFields;
+
+		$data['PARENT'] = Union\Tools::getParentSection($data['ID']);
 
 		// найти корневой раздел
-		$nullSectionId = array_shift($arFields['PARENT']);
+		$nullSectionId = array_shift($data['PARENT']);
 		if(IntVal($nullSectionId) == 0){
-			$nullSectionId = IntVal($arFields['IBLOCK_SECTION_ID']);
+			$nullSectionId = IntVal($data['IBLOCK_SECTION_ID']);
 		}
+
+        if(IntVal($nullSectionId) == 0){
+            $nullSectionId = $data["IBLOCK_SECTION_ID"];
+        }
 
 		// конфигурация обмена
 		$entityConfigSync = new Union\Constructor($nullSectionId);
 		$configSync = $entityConfigSync->get();
 
 		// вытягиваем ID внешнего инфоблока из конфигурации зависимости
-		$arFields['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($arFields["IBLOCK_ID"]);
+		$data['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data["IBLOCK_ID"]);
 		
-		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $arFields["IBLOCK_ID"], 'ID' => $arFields["IBLOCK_SECTION_ID"]));
+		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $data["IBLOCK_ID"], 'ID' => $data["IBLOCK_SECTION_ID"]));
 		if($arSection = $dbSection->Fetch()){
-			$arFields['IBLOCK_SECTION_DATA'] = $arSection;
+			$data['IBLOCK_SECTION_DATA'] = $arSection;
 		}
 		
-		if(IntVal($arFields['PICTURE']) > 0){
-			$arFields['PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PICTURE']);
+		if(IntVal($data['PICTURE']) > 0){
+			$data['PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PICTURE']);
 		}
 
 		// если есть привязка к инфоблоку, обмен разрешен
-		if(IntVal($arFields['IBLOCK_EXTERNAL_ID']) > 0){
+		if(IntVal($data['IBLOCK_EXTERNAL_ID']) > 0){
 			$endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
-			$response = $endpoint->section("add", $arFields);
+			$response = $endpoint->section("add", $data);
 		}
 	}
 
@@ -64,35 +84,46 @@ class Section {
 	 * @return void
 	 */
 	public static function onAfterIBlockSectionUpdate(&$arFields){
+        $data = $arFields;
 
-		$arFields['PARENT'] = Union\Tools::getParentSection($arFields['ID']);
+		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $data["IBLOCK_ID"], 'ID' => $data["IBLOCK_SECTION_ID"]));
+		if($arSection = $dbSection->Fetch()){
+			$data['IBLOCK_SECTION_DATA'] = $arSection;
+		}
+
+		$data['PARENT'] = Union\Tools::getParentSection($data['ID']);
 
 		// найти корневой раздел
-		$nullSectionId = array_shift($arFields['PARENT']);
+		$nullSectionId = array_shift($data['PARENT']);
 		if(IntVal($nullSectionId) == 0){
-			$nullSectionId = IntVal($arFields['IBLOCK_SECTION_ID']);
+			$nullSectionId = IntVal($data['IBLOCK_SECTION_ID']);
 		}
+
+        if(IntVal($nullSectionId) == 0){
+            $nullSectionId = $data["IBLOCK_SECTION_ID"];
+        }
+
+        if($data["IBLOCK_SECTION_ID"] == $nullSectionId){
+            $data["IBLOCK_SECTION_ID"] = false;
+            $data['IBLOCK_SECTION_DATA']['ID'] = false;
+            $data['IBLOCK_SECTION_DATA']['DEPTH_LEVEL'] = 0;
+        }
 
 		// конфигурация обмена
 		$entityConfigSync = new Union\Constructor($nullSectionId);
 		$configSync = $entityConfigSync->get();
 
 		// вытягиваем ID внешнего инфоблока из конфигурации зависимости
-		$arFields['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($arFields["IBLOCK_ID"]);
+		$data['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data["IBLOCK_ID"]);
 
-		$dbSection = \CIBlockSection::GetList(array(), array('IBLOCK_ID' => $arFields["IBLOCK_ID"], 'ID' => $arFields["IBLOCK_SECTION_ID"]));
-		if($arSection = $dbSection->Fetch()){
-			$arFields['IBLOCK_SECTION_DATA'] = $arSection;
+		if(IntVal($data['PICTURE']) > 0){
+			$data['PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PICTURE']);
 		}
-
-		if(IntVal($arFields['PICTURE']) > 0){
-			$arFields['PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PICTURE']);
-		}
-		
+        
 		// если есть привязка к инфоблоку, обмен разрешен
-		if(IntVal($arFields['IBLOCK_EXTERNAL_ID']) > 0){
+		if(IntVal($data['IBLOCK_EXTERNAL_ID']) > 0){
 			$endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
-			$response = $endpoint->section("update", $arFields);
+			$response = $endpoint->section("update", $data);
 		}
 	}
 	
@@ -103,26 +134,31 @@ class Section {
 	 * @return void
 	 */
 	public static function onAfterIBlockSectionDelete(&$arFields){
+        $data = $arFields;
 
-		$arFields['PARENT'] = Union\Tools::getParentSection($arFields['ID']);
+		$data['PARENT'] = Union\Tools::getParentSection($data['ID']);
 
 		// найти корневой раздел
-		$nullSectionId = array_shift($arFields['PARENT']);
+		$nullSectionId = array_shift($data['PARENT']);
 		if(IntVal($nullSectionId) == 0){
-			$nullSectionId = IntVal($arFields['IBLOCK_SECTION_ID']);
+			$nullSectionId = IntVal($data['IBLOCK_SECTION_ID']);
 		}
+
+        if(IntVal($nullSectionId) == 0){
+            $nullSectionId = $data["IBLOCK_SECTION_ID"];
+        }
 
 		// конфигурация обмена
 		$entityConfigSync = new Union\Constructor($nullSectionId);
 		$configSync = $entityConfigSync->get();
 
 		// вытягиваем ID внешнего инфоблока из конфигурации зависимости
-		$arFields['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($arFields["IBLOCK_ID"]);
-
+		$data['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data["IBLOCK_ID"]);
+        
 		// если есть привязка к инфоблоку, обмен разрешен
-		if(IntVal($arFields['IBLOCK_EXTERNAL_ID']) > 0){
+		if(IntVal($data['IBLOCK_EXTERNAL_ID']) > 0){
 			$endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
-			$response = $endpoint->section("delete", $arFields);
+			$response = $endpoint->section("delete", $data);
 		}
 	}
 }

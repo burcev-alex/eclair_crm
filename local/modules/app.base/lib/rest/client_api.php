@@ -319,11 +319,11 @@ class RestClient implements \Iterator, \ArrayAccess
 		$client->error = curl_error($client->handle);
 
 		if ($this->debug) {
-			p2f($curlopt[CURLOPT_HTTPHEADER]);
-			p2f($curlopt);
-			p2f($client->info);
-			p2f($client->headers);
-			p2f($client->error);
+			#p2f($curlopt[CURLOPT_HTTPHEADER]);
+			#p2f($curlopt);
+			#p2f($client->info);
+			#p2f($client->headers);
+			#p2f($client->error);
 		}
 
 		curl_close($client->handle);
@@ -339,7 +339,7 @@ class RestClient implements \Iterator, \ArrayAccess
 	public function parse_response($response)
 	{
 		if ($this->debug) {
-			p2f("PARSE RESPONSE: " . $response);
+			p2f($response);
 		}
 
 		$headers = [];
@@ -387,8 +387,8 @@ class RestClient implements \Iterator, \ArrayAccess
 		}
 
 		if ($this->debug) {
-			p2f($this->response_status_lines);
-			p2f($this->headers);
+			#p2f($this->response_status_lines);
+			#p2f($this->headers);
 			#p2f($this->response);
 		}
 	}
