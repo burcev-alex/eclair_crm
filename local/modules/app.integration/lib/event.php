@@ -26,6 +26,7 @@ class Event
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockElementAdd', ['\App\Integration\Handlers\Iblock\Element', 'onAfterIBlockElementAdd']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockElementUpdate', ['\App\Integration\Handlers\Iblock\Element', 'onAfterIBlockElementUpdate']);
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockElementDelete', ['\App\Integration\Handlers\Iblock\Element', 'onAfterIBlockElementDelete']);
+		$eventManager->addEventHandler('iblock', 'OnBeforeIBlockElementDelete', ['\App\Integration\Handlers\Iblock\Element', 'onBeforeIBlockElementDelete']);
 
 		// property of iblock
 		$eventManager->addEventHandler('iblock', 'OnAfterIBlockPropertyAdd', ['\App\Integration\Handlers\Iblock\Property', 'onAfterIBlockPropertyAdd']);

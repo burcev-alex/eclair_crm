@@ -18,6 +18,26 @@ class Element
         $arFields['XML_ID'] = randString(12);
         $arFields['EXTERNAL_ID'] = $arFields['XML_ID'];
     }
+    /**
+     * До добавления элемента в инфоблок.
+     *
+     * @param array $arFields
+     * @return void
+     */
+    public static function onBeforeIBlockElementDelete(&$ID)
+    {
+		// HARD CODE / по возможности через API определить ID инфоблока торговых предложений
+		if(IntVal($ID) > 0){
+			$rsOfferElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['IBLOCK_ID' => 18, 'PROPERTY_CML2_LINK.ID'=>$ID], false, false, ['ID']);
+			while ($arOfferElement = $rsOfferElement->Fetch()) {
+				\CIBlockElement::Delete($arOfferElement['ID']);
+			}
+		}
+
+    	$arFieldsCustomBefore = Base\Tools::getElementByIDWithProps($ID);
+
+		file_put_contents($_SERVER['DOCUMENT_ROOT'].'/upload/tmp/delete_fields_'.$ID.'.txt', serialize($arFieldsCustomBefore));
+    }
 
     /**
      * После добавления элемента в инфоблок.
@@ -27,15 +47,16 @@ class Element
      */
     public static function onAfterIBlockElementAdd(&$arFields)
     {
-        unlink($_SERVER['DOCUMENT_ROOT'].'/1-dump.html');
-
         \CModule::IncludeModule('catalog');
         \CModule::IncludeModule('iblock');
 
         $data = Base\Tools::getElementByIDWithProps($arFields['ID']);
-        if(array_key_exists('PROPERTIES', $data) && array_key_exists('CML2_LINK', $data['PROPERTIES']['CML2_LINK'])){
-            if(IntVal($data['PROPERTIES']['CML2_LINK']['VALUE']) > 0){
-                $parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES']['CML2_LINK']['VALUE']);
+        if(
+			array_key_exists('PROPERTIES', $data) && 
+			array_key_exists('CML2_LINK', $data['PROPERTIES'])
+			){
+            if(strlen($data['PROPERTIES']['CML2_LINK']['VALUE']) > 0){
+                $parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES_VALUE']['CML2_LINK']);
             }
             else{
                 $parent = [];
@@ -97,11 +118,11 @@ class Element
         $data['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($arFields['IBLOCK_ID']);
 
         if (IntVal($data['PREVIEW_PICTURE']) > 0) {
-            $data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['PREVIEW_PICTURE']);
+            $data['PREVIEW_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['PREVIEW_PICTURE']);
         }
 
         if (IntVal($data['DETAIL_PICTURE']) > 0) {
-            $data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($arFields['DETAIL_PICTURE']);
+            $data['DETAIL_PICTURE'] = Union\Tools::siteURL().\CFile::GetPath($data['DETAIL_PICTURE']);
         }
 
         foreach ($data['PROPERTIES'] as $propertyCode => $propValues) {
@@ -141,28 +162,23 @@ class Element
             $data['PRICE'] = $arrPrice;
         }
 
-        
-        p2f($data);
-        p2f($configSync);
-        p2f($nullSectionId);
-
         if (IntVal($data['IBLOCK_EXTERNAL_ID']) > 0) {
             $endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
             $response = $endpoint->product('add', $data);
 
             // HARD CODE / по возможности через API определить ID инфоблока торговых предложений
             if(IntVal($arFields['ID']) > 0){
-                /*
-                $rsOfferElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['IBLOCK_ID' => 18, 'PROPERTY_CML2_LINK'=>$arFields['ID']], false, false, ['ID', 'ACTIVE']);
+                $rsOfferElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['IBLOCK_ID' => 18, 'PROPERTY_CML2_LINK.ID'=>$arFields['ID']], false, false, ['ID', 'ACTIVE', 'IBLOCK_ID', 'IBLOCK_SECTION_ID']);
                 while ($arOfferElement = $rsOfferElement->Fetch()) {
-                    p2f($arOfferElement);
                     $el = new \CIBlockElement();
                     $arOfferFields = [
-                        'ACTIVE' => $arOfferElement['ACTIVE']
+						'ID' => $arOfferElement['ID'],
+                        'ACTIVE' => $arOfferElement['ACTIVE'],
+                        'IBLOCK_SECTION_ID' => $arOfferElement['IBLOCK_SECTION_ID'],
+                        'IBLOCK_ID' => $arOfferElement['IBLOCK_ID'],
                     ];
                     $el->Update($arOfferElement['ID'], $arOfferFields);
                 }
-                */
             }
         }
     }
@@ -175,8 +191,6 @@ class Element
      */
     public static function onAfterIBlockElementUpdate(&$arFields)
     {
-        unlink($_SERVER['DOCUMENT_ROOT'].'/1-dump.html');
-
         \CModule::IncludeModule('catalog');
 
         $data = Base\Tools::getElementByIDWithProps($arFields['ID']);
@@ -293,8 +307,6 @@ class Element
             $data['PRICE'] = $arrPrice;
         }
 
-        p2f($data);
-
         if (IntVal($data['IBLOCK_EXTERNAL_ID']) > 0) {
             $endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
             $response = $endpoint->product('update', $data);
@@ -309,11 +321,46 @@ class Element
      */
     public static function onAfterIBlockElementDelete(&$arFields)
     {
+		$tmpDataString = file_get_contents($_SERVER['DOCUMENT_ROOT'].'/upload/tmp/delete_fields_'.$arFields['ID'].'.txt');
+		$arFieldsCustomBefore = unserialize($tmpDataString);
+		
+		unlink($_SERVER['DOCUMENT_ROOT'].'/upload/tmp/delete_fields_'.$arFields['ID'].'.txt');
+
+		$data = $arFieldsCustomBefore;
+
+		if(
+            array_key_exists('PROPERTIES', $data) && 
+            array_key_exists('CML2_LINK', $data['PROPERTIES']) && 
+            strlen($data['PROPERTIES']['CML2_LINK']['VALUE']) > 0){
+            $parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES_VALUE']['CML2_LINK']);
+
+            if(count($parent) == 0){
+                $rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['ID' => $data['PROPERTIES_VALUE']['CML2_LINK']], false, false, ['ID', 'XML_ID']);
+                if ($arBindElement = $rsBindElement->Fetch()) {
+                    $parent = Base\Tools::getElementByIDWithProps($arBindElement['ID']);
+                }
+            }
+        }
+        else{
+            $parent = [];
+        }
+
         // найти корневой раздел
-        $arFields['SECTION_PARENT'] = Union\Tools::getParentSection($arFields['IBLOCK_SECTION_ID']);
-        $nullSectionId = array_shift($arFields['SECTION_PARENT']);
-        if (IntVal($nullSectionId) == 0) {
-            $nullSectionId = IntVal($arFields['IBLOCK_SECTION_ID']);
+        if(count($parent) == 0){
+            $data['SECTION_PARENT'] = Union\Tools::getParentSection($data['IBLOCK_SECTION_ID']);
+            $nullSectionId = array_shift($data['SECTION_PARENT']);
+
+            if (IntVal($nullSectionId) == 0) {
+                $nullSectionId = IntVal($arFields['IBLOCK_SECTION_ID']);
+            }
+        }
+        else{
+            $data['SECTION_PARENT'] = Union\Tools::getParentSection($parent['IBLOCK_SECTION_ID']);
+            $nullSectionId = array_shift($data['SECTION_PARENT']);
+
+            if (IntVal($nullSectionId) == 0 && count($parent) > 0) {
+                $nullSectionId = IntVal($parent['IBLOCK_SECTION_ID']);
+            }
         }
 
         // конфигурация обмена
@@ -321,11 +368,11 @@ class Element
         $configSync = $entityConfigSync->get();
 
         // вытягиваем ID внешнего инфоблока из конфигурации зависимости
-        $arFields['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($arFields['IBLOCK_ID']);
+        $data['IBLOCK_EXTERNAL_ID'] = $entityConfigSync->getIblockExternalId($data['IBLOCK_ID']);
 
-        if (IntVal($arFields['IBLOCK_EXTERNAL_ID']) > 0) {
+        if (IntVal($data['IBLOCK_EXTERNAL_ID']) > 0) {
             $endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
-            $response = $endpoint->product('delete', $arFields);
+            $response = $endpoint->product('delete', $data);
         }
     }
 }
