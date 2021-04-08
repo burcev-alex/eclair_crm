@@ -38,7 +38,6 @@ $arFilter = [
 	">=TIMESTAMP_X" => \ConvertTimeStamp($timestamp, "FULL"), 
 	"<=TIMESTAMP_X" => \ConvertTimeStamp(time(), "FULL"), 
 ];
-var_dump($arFilter);
 $arSelect = [
 	'ID',
 	'NAME',
