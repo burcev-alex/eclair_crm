@@ -27,12 +27,19 @@ class Element
      */
     public static function onAfterIBlockElementAdd(&$arFields)
     {
+        unlink($_SERVER['DOCUMENT_ROOT'].'/1-dump.html');
+
         \CModule::IncludeModule('catalog');
         \CModule::IncludeModule('iblock');
 
         $data = Base\Tools::getElementByIDWithProps($arFields['ID']);
         if(array_key_exists('PROPERTIES', $data) && array_key_exists('CML2_LINK', $data['PROPERTIES']['CML2_LINK'])){
-            $parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES']['CML2_LINK']['VALUE']);
+            if(IntVal($data['PROPERTIES']['CML2_LINK']['VALUE']) > 0){
+                $parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES']['CML2_LINK']['VALUE']);
+            }
+            else{
+                $parent = [];
+            }
         }
         else{
             $parent = [];
@@ -65,13 +72,21 @@ class Element
         $data['IBLOCK_SECTION_ID'] = $externalSectionId;
 
         // найти корневой раздел
-        $data['SECTION_PARENT'] = Union\Tools::getParentSection($arFields['IBLOCK_SECTION_ID']);
-        $nullSectionId = array_shift($data['SECTION_PARENT']);
-        if (IntVal($nullSectionId) == 0) {
-            $nullSectionId = IntVal($arFields['IBLOCK_SECTION_ID']);
+        if(count($parent) == 0){
+            $data['SECTION_PARENT'] = Union\Tools::getParentSection($data['IBLOCK_SECTION_DATA']['ID']);
+            $nullSectionId = array_shift($data['SECTION_PARENT']);
+
+            if (IntVal($nullSectionId) == 0) {
+                $nullSectionId = IntVal($arFields['IBLOCK_SECTION_ID']);
+            }
         }
-        if (IntVal($nullSectionId) == 0 && count($parent) > 0) {
-            $nullSectionId = IntVal($parent['IBLOCK_SECTION_ID']);
+        else{
+            $data['SECTION_PARENT'] = Union\Tools::getParentSection($parent['IBLOCK_SECTION_ID']);
+            $nullSectionId = array_shift($data['SECTION_PARENT']);
+
+            if (IntVal($nullSectionId) == 0 && count($parent) > 0) {
+                $nullSectionId = IntVal($parent['IBLOCK_SECTION_ID']);
+            }
         }
 
         // конфигурация обмена
@@ -126,9 +141,29 @@ class Element
             $data['PRICE'] = $arrPrice;
         }
 
+        
+        p2f($data);
+        p2f($configSync);
+        p2f($nullSectionId);
+
         if (IntVal($data['IBLOCK_EXTERNAL_ID']) > 0) {
             $endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
             $response = $endpoint->product('add', $data);
+
+            // HARD CODE / по возможности через API определить ID инфоблока торговых предложений
+            if(IntVal($arFields['ID']) > 0){
+                /*
+                $rsOfferElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['IBLOCK_ID' => 18, 'PROPERTY_CML2_LINK'=>$arFields['ID']], false, false, ['ID', 'ACTIVE']);
+                while ($arOfferElement = $rsOfferElement->Fetch()) {
+                    p2f($arOfferElement);
+                    $el = new \CIBlockElement();
+                    $arOfferFields = [
+                        'ACTIVE' => $arOfferElement['ACTIVE']
+                    ];
+                    $el->Update($arOfferElement['ID'], $arOfferFields);
+                }
+                */
+            }
         }
     }
 
@@ -140,14 +175,23 @@ class Element
      */
     public static function onAfterIBlockElementUpdate(&$arFields)
     {
+        unlink($_SERVER['DOCUMENT_ROOT'].'/1-dump.html');
+
         \CModule::IncludeModule('catalog');
 
         $data = Base\Tools::getElementByIDWithProps($arFields['ID']);
         if(
             array_key_exists('PROPERTIES', $data) && 
             array_key_exists('CML2_LINK', $data['PROPERTIES']) && 
-            IntVal($data['PROPERTIES']['CML2_LINK']['VALUE']) > 0){
-            $parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES']['CML2_LINK']['VALUE']);
+            strlen($data['PROPERTIES']['CML2_LINK']['VALUE']) > 0){
+            $parent = Base\Tools::getElementByIDWithProps($data['PROPERTIES_VALUE']['CML2_LINK']);
+
+            if(count($parent) == 0){
+                $rsBindElement = \CIBlockElement::GetList(['SORT' => 'ASC'], ['XML_ID' => $data['PROPERTIES']['CML2_LINK']['VALUE']], false, false, ['ID', 'XML_ID']);
+                if ($arBindElement = $rsBindElement->Fetch()) {
+                    $parent = Base\Tools::getElementByIDWithProps($arBindElement['ID']);
+                }
+            }
         }
         else{
             $parent = [];
@@ -248,6 +292,8 @@ class Element
         if ($arrPrice = $rsPrice->Fetch()) {
             $data['PRICE'] = $arrPrice;
         }
+
+        p2f($data);
 
         if (IntVal($data['IBLOCK_EXTERNAL_ID']) > 0) {
             $endpoint = new Union\Rest\Client\Web($configSync['host'], $configSync['url'], $configSync['token']);
