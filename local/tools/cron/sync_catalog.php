@@ -28,7 +28,6 @@ $interval = 600; // мин
 
 // интервал запуска анализа заказов
 $timestamp = \COption::GetOptionString('app.indegration', 'cron_last_timestamp', (mktime() - (60 * $interval)));
-$timestamp = (mktime() - (60 * $interval));
 
 $el = new \CIBlockElement();
 
